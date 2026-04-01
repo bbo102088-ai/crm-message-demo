@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>의사랑 CRM v2 — 메시지 발송</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   Design System — CSS Custom Properties (Light)
+   ═══════════════════════════════════════════════════ */
+:root {
+  --color-primary: #4F29E5;
+  --color-primary-hover: #3D1FBF;
+  --color-primary-light: #F5F2FF;
+  --color-primary-100: #EDE8FF;
+  --gray-black: #141415;
+  --gray-100: #171719;
+  --gray-200: #292A2D;
+  --gray-300: #46474C;
+  --gray-400: #70737C;
+  --gray-500: #989BA2;
+  --gray-600: #AEB0B6;
+  --gray-700: #C2C4C8;
+  --gray-white: #FFFFFF;
+  --bg-base: #F4F4F5;
+  --bg-1: #F7F7F8;
+  --bg-2: #F4F4F5;
+  --bg-3: #EAEBEC;
+  --bg-4: #E1E2E4;
+  --bg-5: #878A93;
+  --border-1: #DBDCDF;
+  --border-2: #C2C4C8;
+  --status-negative: #FF4242;
+  --status-positive: #00BF40;
+  --status-info: #0066FF;
+  --status-point: #FF7B2E;
+  --violet-50: #F5F2FF;
+  --violet-100: #EDE8FF;
+  --violet-500: #6541F2;
+  --red-50: #FFF7F6;
+  --red-100: #FEECEC;
+  --green-50: #F3FAEC;
+  --green-100: #CDE8B5;
+  --blue-50: #EFF6FF;
+  --blue-100: #EAF2FE;
+  --blue-500: #3385FF;
+  --yellow-50: #FFFBEB;
+  --yellow-100: #FFF5E1;
+  --yellow-500: #F4A130;
+  --bluegray-100: #EEF0F8;
+  --kakao-brand: #FEE500;
+  --overlay-dim: rgba(0, 0, 0, 0.45);
+  --shadow-1: 0px 0px 4px rgba(0, 0, 0, 0.06);
+  --shadow-2: 0px 0px 8px rgba(0, 0, 0, 0.10);
+  --shadow-3: 0px 0px 12px rgba(0, 0, 0, 0.16);
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --radius-10: 10px;
+  --radius-12: 12px;
+  --radius-16: 16px;
+  --font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --letter-spacing: -0.01em;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-family);
+  background: #C0C0C0;
+  color: var(--gray-100);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 125%;
+  letter-spacing: var(--letter-spacing);
+  -webkit-font-smoothing: antialiased;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+}
+button { font-family: inherit; cursor: pointer; letter-spacing: var(--letter-spacing); }
+input, textarea, select { font-family: inherit; letter-spacing: var(--letter-spacing); }
+
+/* ═══════════════════════════════════════════════════
+   App Shell — outer window frame
+   ═══════════════════════════════════════════════════ */
+.app-window {
+  width: 1280px; height: 1024px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-12);
+  box-shadow: var(--shadow-3);
+  overflow: clip;
+  display: flex; flex-direction: column;
+  position: relative;
+}
+
+/* ── Titlebar ── */
+.titlebar {
+  height: 40px; min-height: 40px;
+  background: var(--bluegray-100);
+  border-bottom: 1px solid var(--border-1);
+  display: flex; align-items: center; justify-content: space-between;
+  position: relative;
+  border-radius: var(--radius-12) var(--radius-12) 0 0;
+}
+.titlebar-logo {
+  display: flex; align-items: center; gap: 4px;
+  margin-left: 16px;
+}
+.titlebar-favicon {
+  width: 16px; height: 16px;
+  background: var(--color-primary);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+.titlebar-favicon svg { width: 10px; height: 10px; }
+.titlebar-text {
+  font-size: 14px; font-weight: 400; color: var(--gray-300);
+  line-height: 1.3;
+}
+.titlebar-controls {
+  display: flex; align-items: center;
+}
+.titlebar-btn {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--gray-100);
+}
+.titlebar-btn:hover { background: rgba(0,0,0,0.06); }
+.titlebar-btn.close:hover { background: #E81123; color: white; }
+.titlebar-btn svg { width: 16px; height: 16px; }
+
+/* ── Main Frame ── */
+.main-frame {
+  flex: 1; display: flex; overflow: hidden;
+}
+
+/* ── LNB (Left Navigation Bar) ── */
+.lnb {
+  width: 224px; min-width: 224px;
+  background: var(--bg-2);
+  border-right: 1px solid var(--border-1);
+  display: flex; flex-direction: column;
+  padding: 12px;
+  gap: 8px;
+}
+.lnb-top { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.lnb-title {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 12px;
+  border-radius: var(--radius-8);
+}
+.lnb-title-text {
+  flex: 1; display: flex; align-items: center;
+  font-size: 18px; font-weight: 800; color: var(--gray-100);
+  letter-spacing: -0.02em;
+}
+.lnb-collapse-btn {
+  width: 24px; height: 24px;
+  border: none; background: transparent;
+  color: var(--gray-400); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.lnb-nav { display: flex; flex-direction: column; gap: 4px; }
+.lnb-separator {
+  padding: 0 8px; margin: 4px 0;
+}
+.lnb-separator-line {
+  height: 1px; background: var(--border-1);
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 12px;
+  border-radius: var(--radius-8);
+  border: none; background: transparent;
+  cursor: pointer; width: 200px;
+  text-align: left;
+  transition: background .15s;
+}
+.nav-item .nav-icon {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.nav-item .nav-icon svg { width: 16px; height: 16px; }
+.nav-item .nav-label {
+  flex: 1; font-size: 16px; font-weight: 400;
+  color: var(--gray-300); line-height: 1.4;
+  letter-spacing: -0.01em;
+  font-feature-settings: 'cpsp' 1, 'case' 1;
+}
+.nav-item:hover { background: var(--bg-3); }
+.nav-item.active {
+  background: var(--violet-100);
+}
+.nav-item.active .nav-label {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+.nav-item.active .nav-icon svg { color: var(--color-primary); }
+
+/* LNB bottom — point display */
+.lnb-point {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 12px;
+  background: var(--gray-white);
+  border-radius: var(--radius-8);
+  width: 200px;
+}
+.lnb-point-label {
+  font-size: 13px; font-weight: 700; color: var(--gray-500);
+  line-height: 1.25; letter-spacing: -0.01em;
+}
+.lnb-point-value {
+  display: flex; align-items: center; gap: 5px;
+}
+.lnb-point-number {
+  font-size: 13px; font-weight: 700; color: var(--color-primary);
+  line-height: 1.25; letter-spacing: -0.01em;
+}
+.lnb-point-icon {
+  width: 16px; height: 16px;
+  background: var(--violet-500);
+  border-radius: 100px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 9px; font-weight: 700;
+}
+
+/* ── Wrap (main content) ── */
+.wrap {
+  flex: 1; display: flex; flex-direction: column;
+  background: var(--gray-white);
+  overflow: hidden;
+}
+
+/* ── Page Header ── */
+.page-header {
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border-1);
+}
+.page-header h1 {
+  font-size: 22px; font-weight: 700;
+  line-height: 1.4; color: var(--gray-100);
+  letter-spacing: -0.01em;
+  font-feature-settings: 'cpsp' 1, 'case' 1;
+}
+
+/* ── Content Container ── */
+.content-container {
+  flex: 1; display: flex;
+  padding: 32px;
+  gap: 24px;
+  overflow: hidden;
+}
+
+/* ── Left Column ── */
+.col-left {
+  flex: 1; display: flex; flex-direction: column;
+  gap: 32px; overflow-y: auto;
+  min-width: 0;
+}
+
+/* ── Quick Banner ── */
+.quick-banner {
+  padding: 16px 20px;
+  background: var(--color-primary);
+  border-radius: var(--radius-12);
+  box-shadow: var(--shadow-2);
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.quick-banner:hover { background: var(--color-primary-hover); }
+.quick-banner-left {
+  display: flex; align-items: center; gap: 12px;
+}
+.quick-banner-icon {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.quick-banner-icon svg { width: 24px; height: 24px; color: white; }
+.quick-banner-text { display: flex; flex-direction: column; gap: 2px; color: white; }
+.quick-banner-text .title {
+  font-size: 16px; font-weight: 700; line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+.quick-banner-text .sub {
+  font-size: 13px; font-weight: 400; line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.quick-banner-arrow {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.quick-banner-arrow svg { width: 24px; height: 24px; color: white; }
+
+/* ── Section Header ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.section-title-group {
+  display: flex; align-items: center; gap: 8px;
+}
+.section-badge {
+  width: 20px; height: 20px;
+  border-radius: var(--radius-6);
+  background: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: white;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+.section-label {
+  font-size: 16px; font-weight: 700; color: var(--gray-100);
+  line-height: 1.4; letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* ── Segmented Control ── */
+.segmented-control {
+  width: 260px; display: flex;
+  background: var(--bg-3);
+  border-radius: var(--radius-8);
+  flex-shrink: 0;
+}
+.segment-btn {
+  flex: 1; height: 44px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-8);
+  font-size: 14px; font-weight: 700;
+  color: var(--gray-500);
+  cursor: pointer; text-align: center;
+  letter-spacing: -0.01em;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.segment-btn.active {
+  background: var(--gray-white);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0px 0px 6px rgba(79,41,229,0.16);
+}
+.segment-btn:hover:not(.active) { color: var(--gray-300); }
+
+/* ── Section 2: Target ── */
+.target-section {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.target-header {
+  display: flex; align-items: center; gap: 4px;
+}
+.target-count-divider {
+  font-size: 16px; font-weight: 400; color: var(--gray-400);
+  line-height: 1.4; letter-spacing: -0.01em;
+}
+.target-count {
+  font-size: 15px; font-weight: 500; color: var(--gray-100);
+  line-height: 1.4; letter-spacing: -0.01em;
+}
+.target-count strong {
+  font-size: 16px; font-weight: 700;
+  color: var(--status-point);
+}
+
+.target-container {
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-12);
+  display: flex; flex-direction: column;
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+
+/* ── Tab Bar ── */
+.tab-bar {
+  display: flex; border-bottom: 1px solid var(--border-1);
+}
+.tab {
+  flex: 1; padding: 15px 24px;
+  font-size: 14px; font-weight: 700;
+  color: var(--gray-500);
+  text-align: center; cursor: pointer;
+  position: relative;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  transition: color .15s;
+}
+.tab.active { color: var(--color-primary); }
+.tab.active::after {
+  content: ''; position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 2px; background: var(--color-primary);
+}
+.tab:hover:not(.active) { color: var(--gray-300); }
+
+/* ── Quick Load Area (gradient border) ── */
+.quick-load-area {
+  background: linear-gradient(to top, var(--violet-100), var(--gray-white));
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-12);
+  padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.quick-load-header {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.quick-load-title {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 14px; font-weight: 500;
+  color: var(--color-primary);
+  letter-spacing: -0.01em; line-height: 1.25;
+}
+.quick-load-title svg { width: 16px; height: 16px; flex-shrink: 0; }
+.quick-load-desc {
+  font-size: 13px; font-weight: 400;
+  color: var(--gray-100);
+  letter-spacing: -0.01em; line-height: 1.25;
+}
+
+/* ── Chips ── */
+.chip-area {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--radius-12);
+  font-size: 13px; font-weight: 400;
+  color: var(--gray-100);
+  letter-spacing: -0.01em; line-height: 1.25;
+  cursor: pointer;
+  border: 1px solid var(--border-2);
+  background: var(--gray-white);
+  transition: all .15s;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.chip .chip-star {
+  width: 12px; height: 12px; flex-shrink: 0;
+}
+.chip .chip-arrow {
+  width: 12px; height: 12px; flex-shrink: 0;
+}
+.chip .chip-folder {
+  width: 12px; height: 10px; flex-shrink: 0;
+}
+.chip-add {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-12);
+  font-size: 13px; font-weight: 500;
+  color: var(--color-primary);
+  letter-spacing: -0.01em; line-height: 1.25;
+  cursor: pointer;
+  border: 1px solid var(--color-primary);
+  background: var(--gray-white);
+  transition: all .15s;
+  white-space: nowrap; text-align: center;
+}
+.chip-add:hover { background: var(--violet-50); }
+.chip-add svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+/* ── Preview Area ── */
+.preview-area {
+  background: var(--bg-2);
+  border-radius: 12px;
+  min-height: 160px;
+  display: flex; flex-direction: column;
+  overflow: clip;
+  padding-left: 8px; padding-top: 8px; padding-bottom: 8px;
+}
+.preview-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px; padding: 24px;
+  color: var(--gray-500);
+}
+.preview-empty p {
+  font-size: 14px; font-weight: 400;
+  text-align: center; line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.preview-filled {
+  padding: 0; display: flex; flex-direction: column;
+  gap: 8px; max-height: 132px; overflow-y: auto;
+  padding-right: 8px;
+}
+.phone-grid-row {
+  display: flex; gap: 8px; width: 100%;
+}
+.phone-grid-cell {
+  flex: 1; min-width: 0;
+  background: var(--gray-white);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-8);
+  padding: 11px 16px;
+  display: flex; align-items: center; gap: 4px;
+  font-size: 14px; font-weight: 400;
+  color: var(--gray-200);
+  letter-spacing: -0.01em; line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  height: 40px;
+}
+.phone-grid-cell:empty {
+  visibility: hidden;
+}
+.patient-card {
+  background: var(--gray-white);
+  border-radius: var(--radius-6);
+  padding: 10px 12px;
+  border: 1px solid var(--border-1);
+  display: flex; align-items: center; gap: 10px;
+  transition: background .1s;
+}
+.patient-card:hover { background: var(--bg-1); }
+.patient-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--violet-50);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.patient-info { flex: 1; }
+.patient-name { font-size: 13px; font-weight: 700; color: var(--gray-200); }
+.patient-meta { font-size: 12px; font-weight: 400; color: var(--gray-500); margin-top: 2px; }
+.patient-card .delete-btn {
+  width: 24px; height: 24px;
+  border-radius: var(--radius-4);
+  border: none; background: var(--bg-1);
+  color: var(--gray-500); font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s;
+}
+.patient-card .delete-btn:hover { background: var(--red-100); color: var(--status-negative); }
+.preview-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-1);
+  text-align: right;
+  font-size: 13px; font-weight: 500;
+  color: var(--status-info);
+  cursor: pointer; text-decoration: underline;
+}
+
+/* ── Detail/Edit Button ── */
+.detail-edit-btn {
+  width: 100%; height: 40px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-8);
+  background: var(--gray-white);
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  font-size: 14px; font-weight: 400;
+  color: var(--gray-200);
+  letter-spacing: -0.01em; line-height: 1.25;
+  cursor: pointer;
+  transition: all .15s;
+}
+.detail-edit-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.detail-edit-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ── Individual Input ── */
+.individual-input-area { display: none; flex-direction: column; gap: 12px; }
+.individual-input-area.show { display: flex; }
+.search-input-wrap { position: relative; }
+.search-input {
+  width: 100%; height: 40px;
+  padding: 0 14px 0 38px;
+  border: 1.5px solid var(--border-1);
+  border-radius: var(--radius-6);
+  font-size: 14px; font-weight: 500;
+  color: var(--gray-100); outline: none;
+  transition: border-color .15s;
+}
+.search-input::placeholder { color: var(--gray-400); }
+.search-input:focus { border-color: var(--color-primary); }
+.search-input-wrap .search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--gray-500); font-size: 15px;
+}
+.direct-input-link {
+  font-size: 13px; font-weight: 500;
+  color: var(--status-info); cursor: pointer;
+  text-decoration: underline;
+}
+.search-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--gray-white);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-10);
+  box-shadow: var(--shadow-2);
+  z-index: 100; display: none;
+  max-height: 260px; overflow-y: auto;
+}
+.search-dropdown.show { display: block; }
+.search-dropdown-item {
+  padding: 10px 14px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  border-bottom: 1px solid var(--bg-1);
+  display: flex; gap: 12px; align-items: center;
+  transition: background .1s;
+}
+.search-dropdown-item:hover { background: var(--bg-1); }
+.search-dropdown-item:last-child { border-bottom: none; }
+.highlight { background: var(--yellow-100); font-weight: 700; border-radius: 2px; padding: 0 1px; }
+
+/* Placeholder tabs */
+.tab-content-placeholder {
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 40px 20px;
+  color: var(--gray-500); text-align: center;
+}
+.tab-content-placeholder.show { display: flex; }
+.tab-content-placeholder .ph-icon { font-size: 32px; }
+.tab-content-placeholder p { font-size: 14px; font-weight: 400; line-height: 160%; }
+
+/* ── Section 3: Time ── */
+.time-section {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.reservation-form {
+  display: none; gap: 10px; flex-wrap: wrap;
+  padding: 14px; background: var(--bg-1);
+  border-radius: var(--radius-8);
+  border: 1px solid var(--border-1);
+}
+.reservation-form.show { display: flex; }
+.res-label { font-size: 13px; font-weight: 600; color: var(--gray-300); width: 100%; }
+.res-input {
+  height: 32px; padding: 0 12px;
+  border: 1.5px solid var(--border-1);
+  border-radius: var(--radius-6);
+  font-size: 13px; font-weight: 500;
+  color: var(--gray-100); outline: none;
+  flex: 1; min-width: 100px;
+  transition: border-color .15s;
+}
+.res-input:focus { border-color: var(--color-primary); }
+.res-select {
+  height: 32px; padding: 0 12px;
+  border: 1.5px solid var(--border-1);
+  border-radius: var(--radius-6);
+  font-size: 13px; font-weight: 500;
+  color: var(--gray-100); outline: none;
+  background: var(--gray-white); min-width: 80px;
+}
+.ad-guide {
+  display: none; margin-top: 10px;
+  padding: 12px 16px;
+  background: var(--yellow-50);
+  border: 1px solid var(--yellow-500);
+  border-radius: var(--radius-8);
+  font-size: 12px; font-weight: 400;
+  color: var(--gray-300); line-height: 160%;
+}
+.ad-guide.show { display: block; }
+
+/* ═══════════════════════════════════════════════════
+   Right Column — Message Compose
+   ═══════════════════════════════════════════════════ */
+.col-right {
+  width: 380px; min-width: 380px;
+  background: var(--gray-white);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-12);
+  padding: 20px;
+  display: flex; flex-direction: column;
+  gap: 20px;
+}
+.msg-top-section {
+  flex: 1; display: flex; flex-direction: column;
+  gap: 12px; min-height: 0;
+}
+.msg-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.msg-title {
+  font-size: 15px; font-weight: 700;
+  color: var(--gray-100); line-height: 1.4;
+  letter-spacing: -0.01em;
+  font-feature-settings: 'cpsp' 1, 'case' 1;
+}
+.template-btn {
+  height: 32px; padding: 0 12px;
+  border-radius: var(--radius-8);
+  border: 1px solid var(--color-primary);
+  background: var(--gray-white);
+  font-size: 14px; font-weight: 400;
+  color: var(--color-primary);
+  display: flex; align-items: center; gap: 2px;
+  letter-spacing: -0.01em; line-height: 1.25;
+  transition: all .15s;
+}
+.template-btn:hover { background: var(--violet-50); }
+.template-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ── Message Area ── */
+.msg-compose-area {
+  flex: 1; display: flex; flex-direction: column;
+  background: var(--blue-100);
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 300px;
+}
+.msg-textarea {
+  flex: 1; width: 100%;
+  padding: 16px;
+  border: none; outline: none; resize: none;
+  font-size: 15px; font-weight: 400;
+  line-height: 1.4; color: var(--gray-100);
+  background: transparent;
+  letter-spacing: -0.01em;
+}
+.msg-textarea::placeholder { color: var(--gray-400); font-weight: 700; font-size: 16px; }
+.msg-textarea-hint {
+  padding: 0 16px;
+  font-size: 15px; font-weight: 400;
+  line-height: 1.4; color: var(--gray-400);
+  letter-spacing: -0.01em;
+}
+.msg-bottom-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 12px 16px;
+  gap: 4px;
+}
+.byte-info {
+  display: flex; align-items: center; gap: 2px;
+  font-size: 14px; font-weight: 400;
+  color: var(--gray-300);
+  letter-spacing: -0.01em; line-height: 1.25;
+}
+.byte-info .byte-bold { font-weight: 700; }
+.msg-type-badge {
+  padding: 4px;
+  border-radius: var(--radius-4);
+  font-size: 13px; font-weight: 700;
+  color: var(--blue-500);
+  letter-spacing: -0.01em; line-height: 1.25;
+  text-align: center;
+}
+.msg-type-badge.lms { color: var(--status-point); }
+.msg-type-badge.mms { color: var(--status-positive); }
+
+/* ── Toolbar Row ── */
+.msg-toolbar {
+  display: flex; align-items: center; gap: 12px;
+}
+.tool-btn {
+  height: 40px; padding: 0 12px;
+  border-radius: var(--radius-8);
+  border: 1px solid var(--border-2);
+  background: var(--gray-white);
+  font-size: 14px; font-weight: 400;
+  color: var(--gray-200);
+  display: flex; align-items: center; gap: 2px;
+  letter-spacing: -0.01em; line-height: 1.25;
+  transition: all .15s;
+}
+.tool-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.tool-btn.active-tool {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--violet-50);
+}
+.tool-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ── Bottom Row (ad + image) ── */
+.msg-options-row {
+  display: flex; align-items: center; gap: 20px;
+}
+.ad-check-area {
+  display: flex; align-items: center; gap: 8px;
+}
+.custom-checkbox {
+  width: 16px; height: 16px;
+  border-radius: var(--radius-4);
+  border: 1.5px solid var(--border-2);
+  background: var(--gray-white);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s;
+  flex-shrink: 0;
+}
+.custom-checkbox.checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.custom-checkbox.checked svg { display: block; }
+.custom-checkbox svg { display: none; width: 10px; height: 10px; color: white; }
+.ad-label {
+  font-size: 14px; font-weight: 700;
+  color: var(--gray-200); cursor: pointer;
+  letter-spacing: -0.01em; line-height: 1.25;
+}
+.tooltip-trigger {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--gray-600);
+  color: white;
+  font-size: 14px; font-weight: 400;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: help; position: relative;
+  line-height: 1.25;
+}
+.tooltip-trigger:hover .tooltip-content { display: block; }
+.tooltip-content {
+  display: none; position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%; transform: translateX(-50%);
+  background: var(--gray-200);
+  color: var(--gray-white);
+  padding: 10px 14px;
+  border-radius: var(--radius-8);
+  font-size: 12px; font-weight: 400;
+  white-space: nowrap; z-index: 200;
+  box-shadow: var(--shadow-2);
+}
+.options-divider {
+  width: 1px; height: 16px;
+  background: #DBDCDF;
+  flex-shrink: 0;
+}
+.img-add-btn {
+  display: flex; align-items: center; gap: 6px;
+  border: none; background: transparent;
+  cursor: pointer; padding: 0;
+}
+.img-add-icon {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.img-add-icon svg { width: 20px; height: 20px; }
+.img-add-text {
+  font-size: 14px; font-weight: 500;
+  color: var(--gray-300);
+  letter-spacing: 0; line-height: 20px;
+  text-align: center;
+}
+.img-add-count {
+  font-size: 12px; font-weight: 500;
+  color: var(--gray-500);
+  line-height: 16px; text-align: center;
+}
+
+/* Image upload container */
+.img-upload-container {
+  display: none; flex-direction: column; gap: 8px;
+}
+.img-upload-container.show { display: flex; }
+.img-upload-slots {
+  display: flex; gap: 10px; align-items: start;
+}
+.img-upload-add {
+  width: 60px; height: 60px;
+  border: 1px dashed var(--border-2);
+  border-radius: var(--radius-8);
+  background: var(--gray-white);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: all .15s;
+}
+.img-upload-add:hover { border-color: var(--color-primary); background: var(--violet-50); }
+.img-upload-add svg { width: 24px; height: 24px; color: var(--gray-500); }
+.img-thumb {
+  width: 60px; height: 60px;
+  border-radius: var(--radius-8);
+  border: 1px solid var(--border-2);
+  background: var(--bg-2);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.img-thumb img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.img-thumb .remove {
+  position: absolute; top: 4px; right: 4px;
+  width: 18px; height: 18px;
+  border-radius: 50%; background: rgba(0,0,0,.55);
+  color: white; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .1s;
+}
+.img-thumb .remove:hover { background: var(--status-negative); }
+.img-upload-desc {
+  font-size: 12px; font-weight: 400;
+  color: var(--gray-500);
+  letter-spacing: -0.01em; line-height: 1.25;
+}
+
+/* Palettes — non-modal popover */
+.palette-anchor { position: relative; }
+.palette {
+  display: none;
+  position: fixed;
+  z-index: 500;
+  width: 340px;
+  padding: 16px; background: var(--gray-white);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-10);
+  box-shadow: var(--shadow-3);
+  max-height: 360px; overflow-y: auto;
+}
+.palette.show { display: block; }
+.palette-title { font-size: 13px; font-weight: 700; color: var(--gray-200); margin-bottom: 10px; }
+.palette-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+.palette-grid button {
+  width: 34px; height: 34px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-6);
+  background: var(--gray-white);
+  font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .1s;
+}
+.palette-grid button:hover { background: var(--violet-50); border-color: var(--color-primary); transform: scale(1.1); }
+.rword-list { display: flex; flex-direction: column; gap: 4px; }
+.rword-item {
+  padding: 8px 14px;
+  border-radius: var(--radius-6);
+  border: 1px solid var(--border-1);
+  background: var(--bg-1);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; display: flex; align-items: center; gap: 10px;
+  transition: all .15s;
+}
+.rword-item:hover { border-color: var(--color-primary); background: var(--violet-50); }
+.rword-item.disabled { opacity: .4; pointer-events: none; }
+.rword-shortcut { font-weight: 700; color: var(--color-primary); min-width: 28px; font-size: 12px; }
+.rword-name { color: var(--gray-300); }
+.rword-hint { font-size: 12px; font-weight: 400; color: var(--gray-500); margin-top: 8px; line-height: 160%; }
+
+/* ═══════════════════════════════════════════════════
+   Bottom Actions
+   ═══════════════════════════════════════════════════ */
+.send-actions {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.send-btn {
+  width: 100%; height: 48px;
+  border: none; border-radius: var(--radius-8);
+  font-size: 16px; font-weight: 700;
+  color: var(--gray-500);
+  background: var(--bg-2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  letter-spacing: -0.01em; line-height: 1.4;
+  transition: all .15s;
+}
+.send-btn.enabled {
+  background: var(--color-primary);
+  color: var(--gray-white);
+}
+.send-btn.enabled:hover { background: var(--color-primary-hover); }
+.save-condition-row {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+.save-condition-row svg { width: 16px; height: 16px; }
+.save-condition-text {
+  font-size: 14px; font-weight: 500;
+  color: var(--gray-400);
+  letter-spacing: -0.01em; line-height: 1.25;
+}
+
+/* ═══════════════════════════════════════════════════
+   Modals
+   ═══════════════════════════════════════════════════ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: var(--overlay-dim);
+  z-index: 1000;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--gray-white);
+  border-radius: var(--radius-12);
+  box-shadow: var(--shadow-3);
+  max-height: 90vh; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.modal-sm { width: 420px; }
+.modal-md { width: 640px; }
+.modal-lg { width: 860px; max-width: 90vw; }
+.modal-header {
+  padding: 20px 24px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-1);
+}
+.modal-header h2 { font-size: 16px; font-weight: 700; color: var(--gray-100); }
+.modal-close {
+  width: 32px; height: 32px;
+  border: none; background: none;
+  font-size: 18px; color: var(--gray-500);
+  cursor: pointer; border-radius: var(--radius-6);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .1s;
+}
+.modal-close:hover { background: var(--bg-1); color: var(--gray-200); }
+.modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-1);
+  display: flex; justify-content: flex-end; gap: 8px;
+}
+.btn-cancel {
+  height: 40px; padding: 0 20px;
+  border: 1.5px solid var(--border-1);
+  border-radius: var(--radius-6);
+  background: var(--gray-white);
+  font-size: 14px; font-weight: 600;
+  color: var(--gray-300); transition: all .15s;
+}
+.btn-cancel:hover { background: var(--bg-1); }
+.btn-primary {
+  height: 40px; padding: 0 20px;
+  border: none; border-radius: var(--radius-6);
+  background: var(--color-primary);
+  font-size: 14px; font-weight: 600;
+  color: var(--gray-white);
+  transition: background .15s;
+}
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Quick Message Modal */
+.qm-layout { display: flex; height: 480px; }
+.qm-categories {
+  width: 180px; border-right: 1px solid var(--border-1);
+  overflow-y: auto; padding: 8px 0; background: var(--bg-1);
+}
+.qm-cat-item {
+  padding: 12px 16px; font-size: 14px; font-weight: 500;
+  cursor: pointer; color: var(--gray-400);
+  transition: all .12s; border-left: 3px solid transparent;
+}
+.qm-cat-item:hover { background: var(--bg-3); color: var(--gray-200); }
+.qm-cat-item.active {
+  background: var(--violet-50); color: var(--color-primary);
+  font-weight: 700; border-left-color: var(--color-primary);
+}
+.qm-messages { flex: 1; overflow-y: auto; padding: 16px; }
+.qm-msg-card {
+  padding: 16px; border: 1.5px solid var(--border-1);
+  border-radius: var(--radius-8); margin-bottom: 10px;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 14px;
+}
+.qm-msg-card:hover { border-color: var(--color-primary); background: var(--violet-50); }
+.qm-msg-card.selected { border-color: var(--color-primary); background: var(--violet-100); }
+.qm-msg-icon { font-size: 24px; }
+.qm-msg-info { flex: 1; }
+.qm-msg-title { font-size: 14px; font-weight: 700; color: var(--gray-200); }
+.qm-msg-desc { font-size: 12px; font-weight: 400; color: var(--gray-500); margin-top: 3px; }
+.qm-star { font-size: 18px; color: var(--gray-700); cursor: pointer; transition: color .15s; }
+.qm-star:hover { color: var(--yellow-500); }
+.qm-star.fav { color: var(--yellow-500); }
+.qm-step { display: none; }
+.qm-step.active { display: block; }
+.qm-method-option {
+  padding: 18px; border: 1.5px solid var(--border-1);
+  border-radius: var(--radius-8); cursor: pointer; margin-bottom: 10px;
+  transition: all .15s;
+}
+.qm-method-option:hover { border-color: var(--color-primary); }
+.qm-method-option.selected { border-color: var(--color-primary); background: var(--violet-50); }
+.qm-method-option h4 { font-size: 14px; font-weight: 700; color: var(--gray-200); margin-bottom: 4px; }
+.qm-method-option p { font-size: 13px; font-weight: 400; color: var(--gray-500); }
+.msg-preview-box {
+  padding: 16px; background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-8);
+  font-size: 14px; font-weight: 400;
+  line-height: 170%; color: var(--gray-300);
+  min-height: 80px; margin-top: 14px;
+  white-space: pre-wrap;
+}
+.condition-summary {
+  padding: 14px 16px;
+  background: var(--violet-50);
+  border: 1px solid var(--violet-100);
+  border-radius: var(--radius-8);
+  font-size: 14px; font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 16px; line-height: 150%;
+}
+.condition-form-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.condition-form-row label { font-size: 13px; font-weight: 600; color: var(--gray-300); min-width: 70px; }
+.condition-form-row input {
+  height: 32px; flex: 1; padding: 0 12px;
+  border: 1.5px solid var(--border-1);
+  border-radius: var(--radius-6);
+  font-size: 13px; color: var(--gray-100); outline: none;
+}
+.condition-form-row input:focus { border-color: var(--color-primary); }
+.qm-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.qm-back-btn {
+  padding: 4px 10px; border: none; background: none;
+  font-size: 13px; font-weight: 600;
+  color: var(--color-primary); cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+}
+.qm-back-btn:hover { text-decoration: underline; }
+.qm-step-title { font-size: 16px; font-weight: 700; color: var(--gray-100); }
+
+/* Confirm Dialog */
+.confirm-body { text-align: center; padding: 24px 0; }
+.confirm-body .icon { font-size: 36px; margin-bottom: 12px; }
+.confirm-body p { font-size: 14px; font-weight: 500; color: var(--gray-300); line-height: 160%; white-space: pre-wrap; }
+
+/* Detail table */
+.detail-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.detail-table th {
+  background: var(--bg-1); padding: 10px 12px; text-align: left;
+  font-size: 12px; font-weight: 700; color: var(--gray-400);
+  border-bottom: 1px solid var(--border-1);
+}
+.detail-table td {
+  padding: 10px 12px; font-size: 13px; font-weight: 500;
+  color: var(--gray-200); border-bottom: 1px solid var(--bg-2);
+}
+.detail-table tr:hover td { background: var(--bg-1); }
+.detail-table input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--color-primary); }
+
+/* Toast */
+.toast-container {
+  position: fixed; top: 24px; right: 24px;
+  z-index: 2000;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  padding: 14px 20px;
+  border-radius: var(--radius-16);
+  font-size: 14px; font-weight: 600;
+  box-shadow: var(--shadow-2);
+  display: flex; align-items: center; gap: 10px;
+  animation: toastIn .3s ease;
+  min-width: 300px;
+}
+.toast.success { background: var(--green-50); color: var(--status-positive); border: 1px solid var(--green-100); }
+.toast.warning { background: var(--red-50); color: var(--status-negative); border: 1px solid var(--red-100); }
+.toast.info { background: var(--blue-50); color: var(--status-info); border: 1px solid var(--blue-100); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-12px); } }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-500); }
+</style>
+</head>
+<body>
+
+<div class="app-window">
+  <!-- ═══════ Titlebar ═══════ -->
+  <div class="titlebar">
+    <div class="titlebar-logo">
+      <div class="titlebar-favicon">
+        <svg viewBox="0 0 10 10" fill="none"><path d="M5 1L2 5h2.5v4L8 5H5.5V1z" fill="white"/></svg>
+      </div>
+      <span class="titlebar-text">의사랑 CRM</span>
+    </div>
+    <div class="titlebar-controls">
+      <button class="titlebar-btn" title="최소화"><svg viewBox="0 0 16 16" fill="none"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
+      <button class="titlebar-btn" title="최대화"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="3" width="10" height="10" rx="0.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
+      <button class="titlebar-btn close" title="닫기"><svg viewBox="0 0 16 16" fill="none"><line x1="3.5" y1="3.5" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="12.5" y1="3.5" x2="3.5" y2="12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ═══════ Main Frame ═══════ -->
+  <div class="main-frame">
+    <!-- ═══════ LNB ═══════ -->
+    <nav class="lnb">
+      <div class="lnb-top">
+        <div class="lnb-title">
+          <span class="lnb-title-text">의사랑 CRM</span>
+          <button class="lnb-collapse-btn" title="접기">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="lnb-nav">
+          <button class="nav-item" onclick="showDemoToast()">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9.5L12 4l9 5.5v9.5a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke-linejoin="round"/><path d="M9 22V12h6v10" stroke-linejoin="round"/></svg></span>
+            <span class="nav-label">홈</span>
+          </button>
+          <button class="nav-item active">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg></span>
+            <span class="nav-label">메시지 발송</span>
+          </button>
+          <button class="nav-item" onclick="showDemoToast()">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></span>
+            <span class="nav-label">매일 발송</span>
+          </button>
+          <button class="nav-item" onclick="showDemoToast()">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            <span class="nav-label">템플릿 관리</span>
+          </button>
+          <button class="nav-item" onclick="showDemoToast()">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <span class="nav-label">일정 관리</span>
+          </button>
+        </div>
+        <div class="lnb-separator"><div class="lnb-separator-line"></div></div>
+        <div class="lnb-nav">
+          <button class="nav-item" onclick="showDemoToast()">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>
+            <span class="nav-label">발송내역</span>
+          </button>
+          <button class="nav-item" onclick="showDemoToast()">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+            <span class="nav-label">환경설정</span>
+          </button>
+        </div>
+      </div>
+      <div class="lnb-point">
+        <span class="lnb-point-label">보유 포인트</span>
+        <div class="lnb-point-value">
+          <span class="lnb-point-number">3,123</span>
+          <span class="lnb-point-icon">P</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ═══════ Wrap (Content Area) ═══════ -->
+    <div class="wrap">
+      <div class="page-header">
+        <h1>메시지 발송</h1>
+      </div>
+
+      <div class="content-container">
+        <!-- ═══════ Left Column ═══════ -->
+        <div class="col-left">
+
+          <!-- Quick Banner -->
+          <div class="quick-banner" onclick="openQuickMessageModal()">
+            <div class="quick-banner-left">
+              <div class="quick-banner-icon">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <div class="quick-banner-text">
+                <div class="title">빠르게 메시지 설정 불러오기</div>
+                <div class="sub">클릭 한 번으로 메시지 준비 완료!</div>
+              </div>
+            </div>
+            <div class="quick-banner-arrow">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+
+          <!-- Section 1: Channel -->
+          <div class="section-header">
+            <div class="section-title-group">
+              <span class="section-badge">1</span>
+              <span class="section-label">채널 선택</span>
+            </div>
+            <div class="segmented-control">
+              <button class="segment-btn active" data-channel="sms" onclick="selectChannel(this)">문자</button>
+              <button class="segment-btn" data-channel="kakao" onclick="selectChannel(this)">카카오톡</button>
+            </div>
+          </div>
+
+          <!-- Section 2: Target -->
+          <div class="target-section">
+            <div class="target-header">
+              <div class="section-title-group">
+                <span class="section-badge">2</span>
+                <span class="section-label">보낼 대상</span>
+              </div>
+              <span class="target-count-divider">&nbsp;/&nbsp;</span>
+              <span class="target-count">총 <strong id="patient-count">10</strong>명</span>
+            </div>
+
+            <div class="target-container">
+              <!-- Tab Bar -->
+              <div class="tab-bar">
+                <div class="tab active" data-tab="condition" onclick="selectTargetTab(this)">조건검색 (<span class="tab-count">20</span>)</div>
+                <div class="tab" data-tab="individual" onclick="selectTargetTab(this)">개별 입력 (<span class="tab-count">0</span>)</div>
+                <div class="tab" data-tab="addressbook" onclick="selectTargetTab(this)">주소록 (<span class="tab-count">0</span>)</div>
+                <div class="tab" data-tab="excel" onclick="selectTargetTab(this)">엑셀 등록 (<span class="tab-count">0</span>)</div>
+              </div>
+
+              <!-- Tab: Condition -->
+              <div class="target-tab-content" id="tab-condition">
+                <!-- Quick Load Area -->
+                <div class="quick-load-area">
+                  <div class="quick-load-header">
+                    <div class="quick-load-title">
+                      <svg viewBox="0 0 16 16" fill="none"><path d="M8.667 1.333L2 9.333h5.333L6.667 14.667l6.666-8H8l.667-5.334z" fill="#4F29E5"/></svg>
+                      빠르게 불러오기
+                    </div>
+                    <div class="quick-load-desc">진료일, 나이, 예약 등 조건으로 환자 찾기</div>
+                  </div>
+                  <div class="chip-area">
+                    <div class="chip" onclick="showSavedConditions()">
+                      <svg class="chip-folder" viewBox="0 0 12 10" fill="none"><path d="M1 1h3.5l1.5 1.5H11a1 1 0 011 1V9a1 1 0 01-1 1H1a1 1 0 01-1-1V2a1 1 0 011-1z" fill="#989BA2"/></svg>
+                      내 저장 조건
+                      <svg class="chip-arrow" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="#70737C" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="chip" onclick="loadPresetPatients('예약')">
+                      <svg class="chip-star" viewBox="0 0 12 12" fill="#F4A130"><path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z"/></svg>
+                      예약 환자
+                    </div>
+                    <div class="chip" onclick="loadPresetPatients('초진')">
+                      <svg class="chip-star" viewBox="0 0 12 12" fill="#F4A130"><path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z"/></svg>
+                      초진 환자
+                    </div>
+                    <div class="chip" onclick="loadPresetPatients('신규')">
+                      <svg class="chip-star" viewBox="0 0 12 12" fill="#F4A130"><path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z"/></svg>
+                      신규 환자
+                    </div>
+                    <div class="chip" onclick="loadPresetPatients('입원')">
+                      <svg class="chip-star" viewBox="0 0 12 12" fill="#F4A130"><path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z"/></svg>
+                      입원한 환자
+                    </div>
+                    <div class="chip" onclick="showDemoToast()">
+                      <svg class="chip-star" viewBox="0 0 12 12" fill="#F4A130"><path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z"/></svg>
+                      특정 진단을 받은 환자
+                    </div>
+                    <div class="chip" onclick="showDemoToast()">
+                      <svg class="chip-star" viewBox="0 0 12 12" fill="#F4A130"><path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z"/></svg>
+                      투약 종료 예정 환자
+                    </div>
+                    <div class="chip" onclick="showDemoToast()">
+                      <svg class="chip-star" viewBox="0 0 12 12" fill="#F4A130"><path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z"/></svg>
+                      F/U 대상 환자
+                    </div>
+                    <button class="chip-add" onclick="showDemoToast()">
+                      <svg viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="#4F29E5" stroke-width="1.5" stroke-linecap="round"/></svg>
+                      직접 조건 설정
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Preview Area -->
+                <div class="preview-area" id="preview-area">
+                  <div class="preview-empty" id="preview-empty">
+                    <p>조건 검색으로 원하는 환자를 불러오세요</p>
+                  </div>
+                  <div class="preview-filled" id="preview-filled" style="display:none"></div>
+                  <div class="preview-footer" id="preview-footer" style="display:none" onclick="openDetailModal()">상세 조회 · 편집</div>
+                </div>
+              </div>
+
+              <!-- Tab: Individual -->
+              <div class="target-tab-content" id="tab-individual" style="display:none">
+                <div class="individual-input-area show">
+                  <div class="search-input-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input class="search-input" id="individual-search" placeholder="환자를 검색하세요" oninput="onIndividualSearch(this.value)" onfocus="onIndividualSearch(this.value)">
+                    <div class="search-dropdown" id="individual-dropdown"></div>
+                  </div>
+                  <span class="direct-input-link" onclick="switchToDirectInput()">번호를 직접 입력할게요</span>
+                  <div class="preview-area" id="individual-preview">
+                    <div class="preview-empty" id="individual-empty">
+                      <p>환자를 검색해<br>보낼 대상을 추가해주세요</p>
+                    </div>
+                    <div class="preview-filled" id="individual-filled" style="display:none"></div>
+                    <div class="preview-footer" id="individual-footer" style="display:none" onclick="openDetailModal()">상세 조회 · 편집</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab: Addressbook -->
+              <div class="target-tab-content" id="tab-addressbook" style="display:none">
+                <div class="tab-content-placeholder show">
+                  <span class="ph-icon">📒</span>
+                  <p>아직 데모 기능이라<br>곧 준비 예정입니다.</p>
+                </div>
+              </div>
+
+              <!-- Tab: Excel -->
+              <div class="target-tab-content" id="tab-excel" style="display:none">
+                <div class="tab-content-placeholder show">
+                  <span class="ph-icon">📄</span>
+                  <p>아직 데모 기능이라<br>곧 준비 예정입니다.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detail Edit Button -->
+            <button class="detail-edit-btn" onclick="openDetailModal()">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M8 3.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zM1 8a7 7 0 1114 0A7 7 0 011 8z" fill="#70737C" fill-rule="evenodd" clip-rule="evenodd"/><circle cx="8" cy="8" r="1.5" fill="#70737C"/></svg>
+              상세 조회 및 편집
+            </button>
+          </div>
+
+          <!-- Section 3: Time -->
+          <div class="time-section">
+            <div class="section-header">
+              <div class="section-title-group">
+                <span class="section-badge">3</span>
+                <span class="section-label">보낼 시간 선택</span>
+              </div>
+              <div class="segmented-control">
+                <button class="segment-btn active" data-time="now" onclick="selectTime(this)">즉시 발송</button>
+                <button class="segment-btn" data-time="reserve" onclick="selectTime(this)">예약 발송</button>
+              </div>
+            </div>
+            <div class="reservation-form" id="reservation-form">
+              <div class="res-label">예약 날짜</div>
+              <input type="date" class="res-input" id="res-date" style="flex:1">
+              <div class="res-label" style="margin-top:4px">예약 시간</div>
+              <div style="display:flex;gap:6px;align-items:center;flex:1">
+                <select class="res-select" id="res-ampm"><option>오전</option><option>오후</option></select>
+                <input type="text" class="res-input" id="res-hour" placeholder="시" style="width:50px;flex:none" maxlength="2" oninput="onResHourInput(this)" onblur="onResHourBlur(this)">
+                <span style="color:var(--gray-500)">:</span>
+                <input type="text" class="res-input" id="res-min" placeholder="분" style="width:50px;flex:none" maxlength="2" oninput="onResMinInput(this)" onblur="onResMinBlur(this)">
+              </div>
+            </div>
+            <div class="ad-guide" id="ad-time-guide">
+              광고 문자는 야간 시간대(22시~08시)에는 발송할 수 없습니다.<br>
+              야간 시간대를 제외한 오전 8시부터 오후 9시 59분까지 발송 가능합니다.
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════ Right Column ═══════ -->
+        <div class="col-right">
+          <div class="msg-top-section">
+            <!-- Header -->
+            <div class="msg-header">
+              <span class="msg-title">메시지 입력</span>
+              <button class="template-btn" onclick="showDemoToast()">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="#4F29E5" stroke-width="1.5" stroke-linecap="round"/></svg>
+                내 템플릿 불러오기
+              </button>
+            </div>
+
+            <!-- Message Compose Area -->
+            <div class="msg-compose-area">
+              <textarea class="msg-textarea" id="msg-textarea" placeholder="보내고 싶은 내용을 입력해주세요" oninput="updateByteCount()"></textarea>
+              <div class="msg-textarea-hint" id="msg-hint">원하는 내용을 템플릿으로 불러올 수도 있습니다.</div>
+              <div class="msg-bottom-bar">
+                <div class="byte-info">
+                  <span class="byte-bold" id="byte-current">76</span>
+                  <span>/</span>
+                  <span id="byte-max">90</span>
+                  <span>byte</span>
+                </div>
+                <span class="msg-type-badge" id="msg-type-badge">SMS</span>
+              </div>
+            </div>
+
+            <!-- Toolbar + Palettes -->
+            <div class="palette-anchor">
+              <div class="msg-toolbar">
+                <button class="tool-btn" id="btn-special" onclick="togglePalette('special')">
+                  <svg viewBox="0 0 16 16" fill="none"><path d="M2 8h12M8 2v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/></svg>
+                  특수문자
+                </button>
+                <button class="tool-btn" id="btn-reserved" onclick="togglePalette('reserved')">
+                  <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 6h6M5 8h6M5 10h4" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
+                  예약어
+                </button>
+              </div>
+
+              <!-- Special character palette -->
+              <div class="palette" id="palette-special">
+                <div class="palette-title">특수문자 입력</div>
+                <div class="palette-grid" id="special-chars-grid"></div>
+              </div>
+
+              <!-- Reserved word palette -->
+              <div class="palette" id="palette-reserved">
+                <div class="palette-title">예약어 입력</div>
+                <div class="rword-hint">예약어 단축키를 입력하거나 클릭하면 자동 변환됩니다.<br>예: !0 입력 후 엔터를 치면 수진자명으로 바뀌며 미리보기로 확인할 수 있습니다.</div>
+                <div class="rword-list" id="rword-list" style="margin-top:10px"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Options Row -->
+          <div class="msg-options-row">
+            <div class="ad-check-area">
+              <div class="custom-checkbox" id="ad-checkbox" onclick="toggleAdCheck()">
+                <svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span class="ad-label" onclick="toggleAdCheck()">광고성</span>
+              <span class="tooltip-trigger">?
+                <span class="tooltip-content">광고성 메시지 체크 시<br>(광고) 표기와 수신거부 안내 문구가 자동 추가됩니다.</span>
+              </span>
+            </div>
+            <span class="options-divider"></span>
+            <button class="img-add-btn" onclick="toggleImageUpload()">
+              <span class="img-add-icon">
+                <svg viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="3" stroke="#46474C" stroke-width="1.3"/><circle cx="7.5" cy="7.5" r="1.5" stroke="#46474C" stroke-width="1.2"/><path d="M2 14l4-4 3 3 3-3 6 6" stroke="#46474C" stroke-width="1.2" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="img-add-text">이미지 추가</span>
+              <span class="img-add-count">(<span id="img-count">0</span>/3)</span>
+            </button>
+          </div>
+          <!-- Image Upload Container -->
+          <div class="img-upload-container" id="img-upload-container">
+            <div class="img-upload-slots">
+              <div class="img-upload-add" id="img-upload-add" onclick="addDemoImage()">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <div id="img-thumbs" style="display:flex;gap:10px"></div>
+            </div>
+            <div class="img-upload-desc">JPG, PNG 파일 (최대 3개, 각 5MB 이하)</div>
+          </div>
+
+          <!-- Send Actions -->
+          <div class="send-actions">
+            <button class="send-btn" id="send-btn" onclick="handleSend()">발송하기</button>
+            <div class="save-condition-row" onclick="saveCondition()">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M13.3 4.7L6.5 11.5 2.7 7.7" stroke="#70737C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="save-condition-text">발송 조건 저장하기</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ Quick Message Modal (SEND_02) ═══════ -->
+<div class="modal-overlay" id="quick-msg-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 id="qm-modal-title">빠른 메시지 설정 불러오기</h2>
+      <button class="modal-close" onclick="closeQuickMessageModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div class="qm-step active" id="qm-step1">
+        <div class="qm-layout">
+          <div class="qm-categories" id="qm-categories"></div>
+          <div class="qm-messages" id="qm-messages"></div>
+        </div>
+      </div>
+      <div class="qm-step" id="qm-step2" style="padding:24px">
+        <div class="qm-nav">
+          <button class="qm-back-btn" onclick="qmGoStep(1)">← 뒤로</button>
+          <span class="qm-step-title" id="qm-selected-title"></span>
+        </div>
+        <div class="qm-method-option" data-method="both" onclick="selectQmMethod(this)">
+          <h4>👥 환자와 메시지 모두 가져오기</h4>
+          <p>간단한 조건 설정을 통해 메시지 내용과 발송 대상을 같이 설정합니다.</p>
+        </div>
+        <div class="qm-method-option" data-method="message" onclick="selectQmMethod(this)">
+          <h4>📝 메시지 내용만 가져오기</h4>
+          <p>메시지 내용만 가져오고, 보낼 대상은 직접 설정합니다.</p>
+        </div>
+        <div class="msg-preview-box" id="qm-preview-text"></div>
+      </div>
+      <div class="qm-step" id="qm-step3" style="padding:24px">
+        <div class="qm-nav">
+          <button class="qm-back-btn" onclick="qmGoStep(2)">← 뒤로</button>
+          <span class="qm-step-title">조건 설정</span>
+        </div>
+        <div class="condition-summary" id="qm-condition-summary">오늘 내원한 환자를 불러옵니다.</div>
+        <div class="condition-form-row">
+          <label>내원기간 *</label>
+          <input type="date" id="qm-date-from" style="flex:1">
+          <span style="color:var(--gray-500)">~</span>
+          <input type="date" id="qm-date-to" style="flex:1">
+        </div>
+        <div class="condition-form-row">
+          <label>성별</label>
+          <select class="res-select" id="qm-gender" style="flex:1" onchange="updateConditionSummary()">
+            <option value="">전체</option>
+            <option value="여성">여성</option>
+            <option value="남성">남성</option>
+          </select>
+        </div>
+        <div class="condition-form-row">
+          <label>나이</label>
+          <input type="number" id="qm-age-from" placeholder="0" style="flex:1" min="0" max="99" onchange="updateConditionSummary()">
+          <span style="color:var(--gray-500)">~</span>
+          <input type="number" id="qm-age-to" placeholder="99" style="flex:1" min="0" max="99" onchange="updateConditionSummary()">
+          <span style="font-size:12px;color:var(--gray-500)">세</span>
+        </div>
+      </div>
+      <div class="qm-step" id="qm-step4" style="padding:24px">
+        <div class="qm-nav">
+          <button class="qm-back-btn" onclick="qmGoStep(2)">← 뒤로</button>
+          <span class="qm-step-title">메시지 미리보기</span>
+        </div>
+        <div class="msg-preview-box" id="qm-final-preview" style="min-height:120px"></div>
+      </div>
+    </div>
+    <div class="modal-footer" id="qm-footer">
+      <button class="btn-cancel" onclick="closeQuickMessageModal()">취소</button>
+      <button class="btn-primary" id="qm-confirm-btn" disabled onclick="confirmQuickMessage()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ Confirm Dialog ═══════ -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 id="confirm-title">확인</h2>
+      <button class="modal-close" onclick="closeConfirm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-body">
+        <p id="confirm-msg"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeConfirm()" id="confirm-cancel-text">취소</button>
+      <button class="btn-primary" onclick="confirmAction()" id="confirm-ok-text">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ Detail View Modal ═══════ -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 id="detail-modal-title">상세 조회 · 편집</h2>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:16px 24px">
+      <table class="detail-table">
+        <thead><tr>
+          <th style="width:36px"><input type="checkbox" id="detail-check-all" onchange="toggleDetailCheckAll(this)"></th>
+          <th>차트번호</th><th>이름</th><th>생년월일</th><th>최종내원일</th><th>나이</th><th>성별</th><th>휴대폰 번호</th>
+        </tr></thead>
+        <tbody id="detail-tbody"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDetailModal()">취소</button>
+      <button class="btn-primary" id="detail-confirm-btn" onclick="confirmDetail()">총 0명 확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ Saved Conditions Dropdown ═══════ -->
+<div class="modal-overlay" id="saved-cond-modal" style="background:transparent">
+  <div class="modal modal-sm" style="position:absolute;top:200px;left:280px;box-shadow:var(--shadow-2)">
+    <div class="modal-header" style="padding:14px 16px 10px">
+      <h2 style="font-size:14px">내 저장 조건</h2>
+      <button class="modal-close" onclick="closeSavedConditions()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:8px 16px 16px">
+      <div id="saved-cond-list" style="color:var(--gray-500);font-size:13px;text-align:center;padding:20px 0">
+        저장한 조건이 없습니다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ Temp Save Confirm ═══════ -->
+<div class="modal-overlay" id="tempsave-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>임시 저장</h2>
+      <button class="modal-close" onclick="closeTempSave(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-body">
+        <span style="font-size:36px">📝</span>
+        <p style="margin-top:12px">임시 저장된 메시지가 있습니다.<br>불러오시겠습니까?</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeTempSave(false)">새로 작성</button>
+      <button class="btn-primary" onclick="closeTempSave(true)">불러오기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ Toast Container ═══════ -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DATA & STATE
+   ═══════════════════════════════════════════════════ */
+const DEMO_PATIENTS = [
+  {chart:'10234',name:'이민호',birth:'1994-03-15',lastVisit:'2026-03-28',age:32,gender:'남',phone:'010-8765-5432',ssn:'940315-1******'},
+  {chart:'10287',name:'김유진',birth:'1988-07-22',lastVisit:'2026-03-30',age:38,gender:'여',phone:'010-3456-7890',ssn:'880722-2******'},
+  {chart:'10301',name:'박서연',birth:'1996-11-03',lastVisit:'2026-03-29',age:30,gender:'여',phone:'010-9876-5432',ssn:'961103-2******'},
+  {chart:'10455',name:'최준혁',birth:'1990-01-10',lastVisit:'2026-03-27',age:36,gender:'남',phone:'010-1234-5678',ssn:'900110-1******'},
+  {chart:'10512',name:'정하은',birth:'2000-05-18',lastVisit:'2026-03-31',age:26,gender:'여',phone:'010-5678-1234',ssn:'000518-4******'},
+  {chart:'10623',name:'오세진',birth:'1985-09-25',lastVisit:'2026-03-25',age:41,gender:'남',phone:'010-2345-6789',ssn:'850925-1******'},
+  {chart:'10789',name:'한소율',birth:'1992-12-08',lastVisit:'2026-03-26',age:34,gender:'여',phone:'010-6789-0123',ssn:'921208-2******'},
+  {chart:'10890',name:'강도윤',birth:'1998-04-30',lastVisit:'2026-03-30',age:28,gender:'남',phone:'010-7890-1234',ssn:'980430-1******'},
+  {chart:'10901',name:'이수민',birth:'1991-06-12',lastVisit:'2026-03-29',age:35,gender:'여',phone:'010-4567-8901',ssn:'910612-2******'},
+  {chart:'10945',name:'이강훈',birth:'1989-08-20',lastVisit:'2026-03-28',age:37,gender:'남',phone:'010-4567-8901',ssn:'890820-1******'},
+];
+
+const QM_CATEGORIES = [
+  {id:'fav',name:'즐겨찾기',icon:'⭐'},
+  {id:'health',name:'건강검진',icon:'🏥'},
+  {id:'obgyn',name:'산부인과',icon:'👶'},
+  {id:'appt',name:'예약안내',icon:'📅'},
+  {id:'event',name:'이벤트/홍보',icon:'🎉'},
+  {id:'revisit',name:'재방문 유도',icon:'🔄'},
+];
+
+const QM_MESSAGES = {
+  fav:[
+    {id:1,title:'건강검진 예약 안내',desc:'건강검진 예약을 안내하는 메시지',fav:true,msg:'#{수진자명}님, 안녕하세요. #{요양기관명}입니다.\n건강검진 예약이 완료되었습니다. 검진 3일 전부터 공복을 유지해 주세요.\n문의사항이 있으시면 언제든 연락해 주세요.'},
+    {id:2,title:'예약 당일 안내',desc:'예약 당일 리마인드 메시지',fav:true,msg:'#{수진자명}님, 오늘 #{예약일시}에 예약이 있습니다.\n#{요양기관명}에서 기다리고 있겠습니다. 내원 시 신분증을 지참해 주세요.'},
+  ],
+  health:[
+    {id:3,title:'검진 3일 전 사전 안내',desc:'건강검진 3일 전 주의사항 안내',fav:false,msg:'#{수진자명}님, #{요양기관명}입니다.\n건강검진이 3일 앞으로 다가왔습니다.\n검진 전 주의사항을 안내드립니다:\n- 검진 전날 저녁 9시 이후 금식\n- 검진 당일 아침 물도 드시지 마세요'},
+    {id:4,title:'검진 결과 안내',desc:'건강검진 결과 수령 안내',fav:false,msg:'#{수진자명}님, 건강검진 결과가 나왔습니다.\n#{요양기관명}에 방문하시어 결과를 확인해 주세요.'},
+  ],
+  obgyn:[
+    {id:5,title:'산전 진찰 안내',desc:'산전 정기 진찰 리마인드',fav:false,msg:'#{수진자명}님, 다음 산전 진찰 일정을 안내드립니다.\n정기적인 검사를 통해 건강한 출산을 준비해 주세요.'},
+  ],
+  appt:[
+    {id:6,title:'내일 예약 안내',desc:'내일 예약 리마인드',fav:false,msg:'#{수진자명}님, 내일 #{예약일시}에 #{요양기관명} 예약이 있습니다.\n내원 시 보험증과 신분증을 지참해 주세요.'},
+    {id:7,title:'예약 노쇼 안내',desc:'예약 불참 후 재예약 유도',fav:false,msg:'#{수진자명}님, 예약하신 일정에 내원하지 않으셨습니다.\n건강 관리를 위해 재예약을 도와드리겠습니다. 편한 시간에 연락 주세요.'},
+  ],
+  event:[
+    {id:8,title:'계절 건강 이벤트',desc:'계절별 건강 관리 이벤트 안내',fav:false,msg:'#{수진자명}님, #{요양기관명}에서 봄맞이 건강 이벤트를 진행합니다.\n자세한 내용은 병원 방문 시 확인해 주세요.'},
+  ],
+  revisit:[
+    {id:9,title:'F/U 1주 전 안내',desc:'추적관찰 1주 전 리마인드',fav:false,msg:'#{수진자명}님, 추적 관찰(F/U) 일정이 1주 앞으로 다가왔습니다.\n#{F/U 일자}에 #{요양기관명}으로 내원해 주세요.'},
+    {id:10,title:'정기검진 안내',desc:'정기검진 재방문 유도',fav:false,msg:'#{수진자명}님, 마지막 내원 이후 시간이 지났습니다.\n건강한 생활을 위해 정기검진을 추천드립니다. #{요양기관명}에서 기다리고 있겠습니다.'},
+  ],
+};
+
+const SPECIAL_CHARS = ['♡','♥','★','☆','◆','◇','■','□','▲','△','▶','▷','●','○','◎','♠','♣','♧','♨','☎','☏','✓','✕','⊙','◈','▣','◐','◑','♩','♪','♬','✿','❀','❁','❂','☀','☁','☂','☃'];
+
+const RESERVED_WORDS = [
+  {shortcut:'!0',name:'수진자명',enabled:true},
+  {shortcut:'!1',name:'수진자 생일 (00월 00일)',enabled:true},
+  {shortcut:'!2',name:'예방주사 접종예정일',enabled:false},
+  {shortcut:'!3',name:'예방주사명칭',enabled:false},
+  {shortcut:'!4',name:'요양기관명',enabled:true},
+  {shortcut:'!5',name:'예약일시 (YYYY-MM-DD HH:MM)',enabled:true},
+  {shortcut:'!6',name:'F/U 일자 (YYYY-MM-DD)',enabled:true},
+  {shortcut:'!7',name:'F/U 메모',enabled:true},
+  {shortcut:'!8',name:'개인정보 동의 및 거부 일자',enabled:true},
+];
+
+let state = {
+  channel: 'sms',
+  targetTab: 'condition',
+  timeMode: 'now',
+  selectedPatients: [],
+  imageCount: 0,
+  adChecked: false,
+  msgContent: '',
+  qmStep: 1,
+  qmSelectedCategory: 'fav',
+  qmSelectedMessage: null,
+  qmMethod: null,
+  confirmCallback: null,
+};
+
+/* ═══════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initSpecialChars();
+  initReservedWords();
+  initQmCategories();
+  initQmMessages('fav');
+  initReservationDefaults();
+  updateByteCount();
+  const hasTempSave = localStorage.getItem('crm_temp_save');
+  if (hasTempSave) {
+    setTimeout(() => { document.getElementById('tempsave-modal').classList.add('show'); }, 500);
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   CHANNEL SELECTION [1]
+   ═══════════════════════════════════════════════════ */
+function selectChannel(btn) {
+  const newChannel = btn.dataset.channel;
+  if (newChannel === state.channel) return;
+  const msgContent = document.getElementById('msg-textarea').value.trim();
+  if (msgContent) {
+    showConfirm('채널 변경','작성한 메시지 내용이 있습니다.\n채널을 변경하면 기존 내용이 초기화될 수 있습니다.\n변경하시겠습니까?','취소','변경',() => doChannelSwitch(btn, newChannel));
+  } else { doChannelSwitch(btn, newChannel); }
+}
+function doChannelSwitch(btn, newChannel) {
+  state.channel = newChannel;
+  btn.closest('.segmented-control').querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════
+   TARGET TABS [2]
+   ═══════════════════════════════════════════════════ */
+function selectTargetTab(tabEl) {
+  const tabId = tabEl.dataset.tab;
+  state.targetTab = tabId;
+  document.querySelectorAll('.tab-bar .tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.querySelectorAll('.target-tab-content').forEach(c => c.style.display = 'none');
+  document.getElementById('tab-' + tabId).style.display = 'block';
+}
+
+/* ═══════════════════════════════════════════════════
+   CONDITION CHIPS [2-5]
+   ═══════════════════════════════════════════════════ */
+function loadPresetPatients(type) {
+  let patients;
+  if (type === '예약') patients = DEMO_PATIENTS.slice(0, 4);
+  else if (type === '초진') patients = DEMO_PATIENTS.slice(2, 5);
+  else if (type === '입원') patients = DEMO_PATIENTS.slice(3, 6);
+  else patients = DEMO_PATIENTS.slice(5, 8);
+  state.selectedPatients = [...patients];
+  renderPatientPreview();
+  updatePatientCount();
+  updateSendBtnState();
+  showToast('success', type + ' 환자 ' + patients.length + '명을 불러왔습니다.');
+}
+function renderPatientPreview() {
+  const empty = document.getElementById('preview-empty');
+  const filled = document.getElementById('preview-filled');
+  const footer = document.getElementById('preview-footer');
+  if (state.selectedPatients.length === 0) {
+    empty.style.display = 'flex'; filled.style.display = 'none'; footer.style.display = 'none'; return;
+  }
+  empty.style.display = 'none'; filled.style.display = 'flex'; footer.style.display = 'block';
+  let html = '';
+  for (let i = 0; i < state.selectedPatients.length; i += 2) {
+    const p1 = state.selectedPatients[i];
+    const p2 = state.selectedPatients[i + 1];
+    html += '<div class="phone-grid-row">';
+    html += `<div class="phone-grid-cell">${p1.phone} (${p1.name}/${p1.age}/${p1.gender})</div>`;
+    if (p2) html += `<div class="phone-grid-cell">${p2.phone} (${p2.name}/${p2.age}/${p2.gender})</div>`;
+    else html += '<div class="phone-grid-cell"></div>';
+    html += '</div>';
+  }
+  filled.innerHTML = html;
+  document.getElementById('detail-confirm-btn').textContent = '총 ' + state.selectedPatients.length + '명 확인';
+}
+function removePatient(idx) {
+  state.selectedPatients.splice(idx, 1);
+  renderPatientPreview();
+  updatePatientCount();
+  updateSendBtnState();
+}
+function updatePatientCount() {
+  document.getElementById('patient-count').textContent = state.selectedPatients.length;
+}
+function updateSendBtnState() {
+  const btn = document.getElementById('send-btn');
+  const msg = document.getElementById('msg-textarea').value.trim();
+  if (state.selectedPatients.length > 0 && msg) {
+    btn.classList.add('enabled');
+  } else {
+    btn.classList.remove('enabled');
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   INDIVIDUAL INPUT [2-2]
+   ═══════════════════════════════════════════════════ */
+function onIndividualSearch(val) {
+  const dropdown = document.getElementById('individual-dropdown');
+  if (!val || val.length < 1) { dropdown.classList.remove('show'); return; }
+  const results = DEMO_PATIENTS.filter(p =>
+    p.name.includes(val) || p.phone.includes(val) || p.chart.includes(val) || (p.ssn && p.ssn.includes(val))
+  );
+  if (results.length === 0) {
+    dropdown.innerHTML = '<div style="padding:16px;text-align:center;color:var(--gray-500);font-size:13px">검색 결과가 없습니다.</div>';
+    dropdown.classList.add('show'); return;
+  }
+  dropdown.innerHTML = results.map(p => {
+    const hl = (str) => str.replace(new RegExp(`(${val.replace(/[-\/\\^$*+?.()|[\]{}]/g,'\\$&')})`,'g'), '<span class="highlight">$1</span>');
+    return `<div class="search-dropdown-item" onclick="addIndividualPatient('${p.chart}')">
+      <span style="min-width:60px;color:var(--gray-500)">${hl(p.chart)}</span>
+      <span style="min-width:50px;font-weight:700;color:var(--gray-200)">${hl(p.name)}</span>
+      <span style="color:var(--gray-500)">${p.age}세/${p.gender}</span>
+      <span style="color:var(--gray-500)">${hl(p.phone)}</span>
+    </div>`;
+  }).join('');
+  dropdown.classList.add('show');
+}
+function addIndividualPatient(chart) {
+  const p = DEMO_PATIENTS.find(x => x.chart === chart);
+  if (!p) return;
+  if (state.selectedPatients.find(x => x.chart === chart)) { showToast('warning', '이미 추가된 환자입니다.'); return; }
+  state.selectedPatients.push(p);
+  document.getElementById('individual-dropdown').classList.remove('show');
+  document.getElementById('individual-search').value = '';
+  renderIndividualPreview(); renderPatientPreview(); updatePatientCount(); updateSendBtnState();
+}
+function renderIndividualPreview() {
+  const empty = document.getElementById('individual-empty');
+  const filled = document.getElementById('individual-filled');
+  const footer = document.getElementById('individual-footer');
+  if (state.selectedPatients.length === 0) { empty.style.display = 'flex'; filled.style.display = 'none'; footer.style.display = 'none'; return; }
+  empty.style.display = 'none'; filled.style.display = 'flex'; footer.style.display = 'block';
+  let html = '';
+  for (let i = 0; i < state.selectedPatients.length; i += 2) {
+    const p1 = state.selectedPatients[i];
+    const p2 = state.selectedPatients[i + 1];
+    html += '<div class="phone-grid-row">';
+    html += `<div class="phone-grid-cell">${p1.phone} (${p1.name}/${p1.age}/${p1.gender})</div>`;
+    if (p2) html += `<div class="phone-grid-cell">${p2.phone} (${p2.name}/${p2.age}/${p2.gender})</div>`;
+    else html += '<div class="phone-grid-cell"></div>';
+    html += '</div>';
+  }
+  filled.innerHTML = html;
+}
+function switchToDirectInput() {
+  const input = document.getElementById('individual-search');
+  input.placeholder = '휴대폰 번호를 입력하세요'; input.value = ''; input.focus();
+  showToast('info', '번호 직접 입력 모드로 전환되었습니다.');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-input-wrap')) document.getElementById('individual-dropdown').classList.remove('show');
+});
+
+/* ═══════════════════════════════════════════════════
+   SEND TIME [3]
+   ═══════════════════════════════════════════════════ */
+function selectTime(btn) {
+  const mode = btn.dataset.time; state.timeMode = mode;
+  btn.closest('.segmented-control').querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('reservation-form').classList.toggle('show', mode === 'reserve');
+  checkAdGuide();
+}
+function initReservationDefaults() {
+  const now = new Date(); const pad = n => String(n).padStart(2, '0');
+  document.getElementById('res-date').value = now.toISOString().split('T')[0];
+  const future = new Date(now.getTime() + 30 * 60000); const h = future.getHours();
+  document.getElementById('res-ampm').value = h >= 12 ? '오후' : '오전';
+  document.getElementById('res-hour').value = pad(h > 12 ? h - 12 : (h === 0 ? 12 : h));
+  document.getElementById('res-min').value = pad(future.getMinutes());
+}
+function onResHourInput(el) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+}
+function onResHourBlur(el) {
+  const pad = n => String(n).padStart(2, '0');
+  let v = parseInt(el.value, 10);
+  if (isNaN(v) || v < 0) { el.value = ''; return; }
+  if (v === 0) {
+    document.getElementById('res-ampm').value = '오전';
+    el.value = '12';
+    return;
+  }
+  if (v > 12) {
+    if (v > 23) v = 23;
+    if (v >= 12) {
+      document.getElementById('res-ampm').value = '오후';
+      el.value = pad(v === 12 ? 12 : v - 12);
+    } else {
+      document.getElementById('res-ampm').value = '오전';
+      el.value = pad(v);
+    }
+  } else {
+    el.value = pad(v);
+  }
+}
+function onResMinInput(el) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+}
+function onResMinBlur(el) {
+  const pad = n => String(n).padStart(2, '0');
+  let v = parseInt(el.value, 10);
+  if (isNaN(v) || v < 0) { el.value = '00'; return; }
+  if (v > 59) v = 59;
+  el.value = pad(v);
+}
+
+/* ═══════════════════════════════════════════════════
+   MESSAGE COMPOSE
+   ═══════════════════════════════════════════════════ */
+function updateByteCount() {
+  const ta = document.getElementById('msg-textarea'); const text = ta.value; state.msgContent = text;
+  let bytes = 0; for (let i = 0; i < text.length; i++) bytes += text.charCodeAt(i) > 127 ? 2 : 1;
+  const badge = document.getElementById('msg-type-badge');
+  const currentEl = document.getElementById('byte-current');
+  const maxEl = document.getElementById('byte-max');
+  const hasImage = state.imageCount > 0;
+  const hint = document.getElementById('msg-hint');
+  if (text.length > 0) { hint.style.display = 'none'; } else { hint.style.display = 'block'; }
+  if (hasImage) { badge.textContent = bytes > 2000 ? Math.ceil(bytes / 2000) + ' MMS' : 'MMS'; badge.className = 'msg-type-badge mms'; }
+  else if (bytes > 2000) { badge.textContent = Math.ceil(bytes / 2000) + ' LMS'; badge.className = 'msg-type-badge lms'; }
+  else if (bytes > 90) { badge.textContent = '1LMS'; badge.className = 'msg-type-badge lms'; }
+  else { badge.textContent = 'SMS'; badge.className = 'msg-type-badge'; }
+  currentEl.textContent = bytes;
+  maxEl.textContent = bytes <= 90 ? '90' : '2000';
+  if (text.length > 0) localStorage.setItem('crm_temp_save', JSON.stringify({msg: text, time: Date.now()}));
+  updateSendBtnState();
+}
+function initSpecialChars() {
+  document.getElementById('special-chars-grid').innerHTML = SPECIAL_CHARS.map(c => `<button onclick="insertChar('${c}')">${c}</button>`).join('');
+}
+function togglePalette(type) {
+  const palette = document.getElementById('palette-' + (type === 'special' ? 'special' : 'reserved'));
+  const btn = document.getElementById('btn-' + (type === 'special' ? 'special' : 'reserved'));
+  const isOpen = palette.classList.contains('show');
+  document.querySelectorAll('.palette').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active-tool'));
+  if (!isOpen) {
+    const rect = btn.getBoundingClientRect();
+    const appWin = document.querySelector('.app-window').getBoundingClientRect();
+    const pw = 340;
+    let left = rect.left;
+    if (left + pw > appWin.right - 12) left = appWin.right - pw - 12;
+    if (left < appWin.left + 12) left = appWin.left + 12;
+    palette.style.left = left + 'px';
+    palette.style.top = (rect.bottom + 6) + 'px';
+    palette.style.maxHeight = (appWin.bottom - rect.bottom - 18) + 'px';
+    palette.classList.add('show');
+    btn.classList.add('active-tool');
+  }
+}
+function insertChar(ch) {
+  const ta = document.getElementById('msg-textarea'); const start = ta.selectionStart; const end = ta.selectionEnd;
+  ta.value = ta.value.substring(0, start) + ch + ta.value.substring(end);
+  ta.selectionStart = ta.selectionEnd = start + ch.length; ta.focus(); updateByteCount();
+}
+function initReservedWords() {
+  document.getElementById('rword-list').innerHTML = RESERVED_WORDS.map(rw =>
+    `<div class="rword-item${rw.enabled ? '' : ' disabled'}" onclick="${rw.enabled ? `insertReservedWord('${rw.name}')` : ''}">
+      <span class="rword-shortcut">${rw.shortcut}</span><span class="rword-name">${rw.name}</span>
+    </div>`).join('');
+}
+function insertReservedWord(name) { insertChar('#{' + name + '}'); }
+document.addEventListener('keydown', (e) => {
+  if (e.target.id !== 'msg-textarea') return;
+  if (e.key === 'Enter') {
+    const ta = e.target; const text = ta.value; const cursorPos = ta.selectionStart;
+    const before = text.substring(0, cursorPos); const match = before.match(/(!(\d))$/);
+    if (match) { const rw = RESERVED_WORDS.find(r => r.shortcut === match[1]);
+      if (rw && rw.enabled) { e.preventDefault(); const replacement = '#{' + rw.name + '}';
+        ta.value = text.substring(0, cursorPos - match[0].length) + replacement + text.substring(cursorPos);
+        ta.selectionStart = ta.selectionEnd = cursorPos - match[0].length + replacement.length; updateByteCount(); } }
+  }
+});
+function toggleAdCheck() {
+  state.adChecked = !state.adChecked;
+  const checkbox = document.getElementById('ad-checkbox');
+  checkbox.classList.toggle('checked', state.adChecked);
+  checkAdGuide();
+  if (state.adChecked) {
+    const ta = document.getElementById('msg-textarea');
+    if (!ta.value.includes('(광고)')) { ta.value = '(광고) ' + ta.value + '\n\n무료수신거부 080-XXX-XXXX (인증번호: 12345)'; updateByteCount(); }
+  }
+}
+function checkAdGuide() { document.getElementById('ad-time-guide').classList.toggle('show', state.adChecked && state.timeMode !== 'none'); }
+function toggleImageUpload() {
+  const container = document.getElementById('img-upload-container');
+  if (container.classList.contains('show')) {
+    if (state.imageCount === 0) container.classList.remove('show');
+    else addDemoImage();
+  } else {
+    container.classList.add('show');
+    if (state.imageCount === 0) addDemoImage();
+  }
+}
+function addDemoImage() {
+  if (state.imageCount >= 3) { showToast('warning', '이미지는 최대 3개까지 첨부 가능합니다.'); return; }
+  state.imageCount++; document.getElementById('img-count').textContent = state.imageCount;
+  document.getElementById('img-upload-container').classList.add('show');
+  const thumbs = document.getElementById('img-thumbs'); const thumb = document.createElement('div');
+  thumb.className = 'img-thumb';
+  const colors = ['#E8D5F5', '#D5E8F5', '#F5E8D5'];
+  thumb.style.background = colors[(state.imageCount - 1) % 3];
+  thumb.innerHTML = `<svg viewBox="0 0 24 24" fill="none" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#999" stroke-width="1.2"/><circle cx="8.5" cy="8.5" r="1.5" stroke="#999" stroke-width="1"/><path d="M3 16l5-5 3.5 3.5 3-3L21 18" stroke="#999" stroke-width="1.2" stroke-linejoin="round"/></svg><span class="remove" onclick="removeDemoImage(this)">✕</span>`;
+  thumbs.appendChild(thumb);
+  if (state.imageCount >= 3) document.getElementById('img-upload-add').style.display = 'none';
+  updateByteCount();
+}
+function removeDemoImage(el) {
+  el.parentElement.remove(); state.imageCount--; document.getElementById('img-count').textContent = state.imageCount;
+  document.getElementById('img-upload-add').style.display = 'flex';
+  if (state.imageCount === 0) document.getElementById('img-upload-container').classList.remove('show');
+  updateByteCount();
+}
+
+/* ═══════════════════════════════════════════════════
+   SEND / SAVE ACTIONS
+   ═══════════════════════════════════════════════════ */
+function handleSend() {
+  if (state.selectedPatients.length === 0) { showToast('warning', '보낼 대상을 선택해주세요.'); return; }
+  const msg = document.getElementById('msg-textarea').value.trim();
+  if (!msg) { showToast('warning', '메시지를 입력해주세요.'); return; }
+  if (state.adChecked) { const h = new Date().getHours(); if (h >= 22 || h < 8) { showToast('warning', '광고 문자는 야간 시간대를 제외하고 예약해 주세요.'); return; } }
+  if (state.selectedPatients.length > 5) {
+    showConfirm('대량 발송 확인', `메시지를 ${state.selectedPatients.length}명에게 대량으로 발송하시겠습니까?`, '취소', '발송하기', () => executeSend());
+  } else { executeSend(); }
+}
+function executeSend() { showToast('success', `메시지를 발송했습니다. (${state.timeMode === 'now' ? '즉시' : '예약'})`); localStorage.removeItem('crm_temp_save'); }
+function saveCondition() { showConfirm('발송 조건 저장', '이 발송 조건의 제목을 입력해주세요.', '취소', '저장', () => showToast('success', '발송 조건이 저장되었습니다.')); }
+
+/* ═══════════════════════════════════════════════════
+   QUICK MESSAGE MODAL (SEND_02)
+   ═══════════════════════════════════════════════════ */
+function openQuickMessageModal() {
+  const msg = document.getElementById('msg-textarea').value.trim();
+  if (msg) { showConfirm('빠른 메시지 불러오기', '현재 작성 중인 내용이 있습니다.\n빠른 메시지를 불러오면 기존 내용이 대체됩니다.', '취소', '불러오기', () => doOpenQuickModal()); }
+  else { doOpenQuickModal(); }
+}
+function doOpenQuickModal() {
+  state.qmStep = 1; state.qmSelectedMessage = null; state.qmMethod = null; updateQmSteps();
+  document.getElementById('qm-confirm-btn').disabled = true;
+  document.getElementById('quick-msg-modal').classList.add('show');
+}
+function closeQuickMessageModal() { document.getElementById('quick-msg-modal').classList.remove('show'); }
+function initQmCategories() {
+  document.getElementById('qm-categories').innerHTML = QM_CATEGORIES.map((c, i) =>
+    `<div class="qm-cat-item${i === 0 ? ' active' : ''}" data-cat="${c.id}" onclick="selectQmCategory('${c.id}', this)">${c.icon} ${c.name}</div>`).join('');
+}
+function selectQmCategory(catId, el) {
+  state.qmSelectedCategory = catId;
+  document.querySelectorAll('.qm-cat-item').forEach(c => c.classList.remove('active'));
+  el.classList.add('active'); initQmMessages(catId);
+}
+function initQmMessages(catId) {
+  const msgs = QM_MESSAGES[catId] || [];
+  const el = document.getElementById('qm-messages');
+  if (msgs.length === 0) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-500);font-size:14px">이 카테고리에 메시지가 없습니다.</div>'; return; }
+  el.innerHTML = msgs.map(m =>
+    `<div class="qm-msg-card" data-id="${m.id}" onclick="selectQmMessage(${m.id})">
+      <div class="qm-msg-icon">📨</div>
+      <div class="qm-msg-info"><div class="qm-msg-title">${m.title}</div><div class="qm-msg-desc">${m.desc}</div></div>
+      <span class="qm-star${m.fav ? ' fav' : ''}" onclick="event.stopPropagation(); toggleQmFav(${m.id}, this)">★</span>
+    </div>`).join('');
+}
+function toggleQmFav(id, el) { el.classList.toggle('fav'); showToast('success', el.classList.contains('fav') ? '즐겨찾기에 추가되었습니다.' : '즐겨찾기에서 제거되었습니다.'); }
+function selectQmMessage(id) {
+  for (const cat in QM_MESSAGES) { const found = QM_MESSAGES[cat].find(m => m.id === id); if (found) { state.qmSelectedMessage = found; break; } }
+  qmGoStep(2);
+}
+function qmGoStep(step) { state.qmStep = step; updateQmSteps(); }
+function updateQmSteps() {
+  document.querySelectorAll('.qm-step').forEach(s => s.classList.remove('active'));
+  if (state.qmStep === 1) {
+    document.getElementById('qm-step1').classList.add('active');
+    document.getElementById('qm-modal-title').textContent = '빠른 메시지 설정 불러오기';
+    document.getElementById('qm-confirm-btn').disabled = true; document.getElementById('qm-confirm-btn').textContent = '확인';
+  } else if (state.qmStep === 2) {
+    document.getElementById('qm-step2').classList.add('active');
+    document.getElementById('qm-selected-title').textContent = state.qmSelectedMessage?.title || '';
+    document.getElementById('qm-preview-text').textContent = state.qmSelectedMessage?.msg || '';
+    document.getElementById('qm-modal-title').textContent = '메시지 설정 선택';
+    document.querySelectorAll('.qm-method-option').forEach(o => o.classList.remove('selected'));
+    state.qmMethod = null; document.getElementById('qm-confirm-btn').disabled = true; document.getElementById('qm-confirm-btn').textContent = '확인';
+  } else if (state.qmStep === 3) {
+    document.getElementById('qm-step3').classList.add('active');
+    document.getElementById('qm-modal-title').textContent = '조건 설정';
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('qm-date-from').value = today; document.getElementById('qm-date-to').value = today;
+    updateConditionSummary();
+    document.getElementById('qm-confirm-btn').disabled = false; document.getElementById('qm-confirm-btn').textContent = '불러오기';
+  } else if (state.qmStep === 4) {
+    document.getElementById('qm-step4').classList.add('active');
+    document.getElementById('qm-final-preview').textContent = state.qmSelectedMessage?.msg || '';
+    document.getElementById('qm-modal-title').textContent = '메시지 미리보기';
+    document.getElementById('qm-confirm-btn').disabled = false; document.getElementById('qm-confirm-btn').textContent = '불러오기';
+  }
+}
+function selectQmMethod(el) {
+  document.querySelectorAll('.qm-method-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected'); state.qmMethod = el.dataset.method; document.getElementById('qm-confirm-btn').disabled = false;
+}
+function updateConditionSummary() {
+  const from = document.getElementById('qm-date-from').value; const to = document.getElementById('qm-date-to').value;
+  const gender = document.getElementById('qm-gender').value;
+  const ageFrom = document.getElementById('qm-age-from').value; const ageTo = document.getElementById('qm-age-to').value;
+  const today = new Date().toISOString().split('T')[0]; let parts = [];
+  if (from === today && to === today) parts.push('오늘 내원하고');
+  else if (from && to) parts.push(from.replace(/-/g, '.') + '~' + to.replace(/-/g, '.') + '에 내원하고');
+  if (ageFrom && ageTo) parts.push(ageFrom + '세 ~ ' + ageTo + '세이며');
+  if (gender) parts.push(gender + '인');
+  document.getElementById('qm-condition-summary').textContent = parts.length === 0 ? '오늘 내원한 환자를 불러옵니다.' : parts.join(', ') + ' 환자를 불러옵니다.';
+}
+function confirmQuickMessage() {
+  if (state.qmStep === 2) { if (state.qmMethod === 'both') { qmGoStep(3); return; } else if (state.qmMethod === 'message') { qmGoStep(4); return; } }
+  const ta = document.getElementById('msg-textarea'); ta.value = state.qmSelectedMessage?.msg || ''; updateByteCount();
+  if (state.qmMethod === 'both') { state.selectedPatients = DEMO_PATIENTS.slice(0, 5); renderPatientPreview(); updatePatientCount(); updateSendBtnState(); showToast('success', '메시지 설정을 불러왔습니다. (환자 ' + state.selectedPatients.length + '명 포함)'); }
+  else { showToast('success', '메시지 설정을 불러왔습니다.'); }
+  closeQuickMessageModal();
+}
+
+/* ═══════════════════════════════════════════════════
+   DETAIL VIEW MODAL
+   ═══════════════════════════════════════════════════ */
+function openDetailModal() {
+  document.getElementById('detail-tbody').innerHTML = state.selectedPatients.map(p =>
+    `<tr><td><input type="checkbox" checked></td><td>${p.chart}</td><td>${p.name}</td><td>${p.birth}</td><td>${p.lastVisit}</td><td>${p.age}</td><td>${p.gender}</td><td>${p.phone}</td></tr>`).join('');
+  document.getElementById('detail-modal-title').textContent = '상세 조회 · 편집 > 총 ' + state.selectedPatients.length + '명';
+  document.getElementById('detail-confirm-btn').textContent = '총 ' + state.selectedPatients.length + '명 확인';
+  document.getElementById('detail-modal').classList.add('show');
+}
+function closeDetailModal() { document.getElementById('detail-modal').classList.remove('show'); }
+function toggleDetailCheckAll(el) { document.querySelectorAll('#detail-tbody input[type=checkbox]').forEach(cb => cb.checked = el.checked); }
+function confirmDetail() { closeDetailModal(); showToast('success', '대상 확인이 완료되었습니다.'); }
+
+/* ═══════════════════════════════════════════════════
+   MISC MODALS
+   ═══════════════════════════════════════════════════ */
+function showSavedConditions() { document.getElementById('saved-cond-modal').classList.add('show'); }
+function closeSavedConditions() { document.getElementById('saved-cond-modal').classList.remove('show'); }
+function closeTempSave(load) {
+  document.getElementById('tempsave-modal').classList.remove('show');
+  if (load) { try { const data = JSON.parse(localStorage.getItem('crm_temp_save'));
+    if (data && data.msg) { document.getElementById('msg-textarea').value = data.msg; updateByteCount(); showToast('success', '임시 저장된 메시지를 불러왔습니다.'); } } catch(e) {} }
+  else { localStorage.removeItem('crm_temp_save'); }
+}
+window.addEventListener('beforeunload', () => {
+  const msg = document.getElementById('msg-textarea').value.trim();
+  if (msg || state.selectedPatients.length > 0) localStorage.setItem('crm_temp_save', JSON.stringify({msg, patients: state.selectedPatients, time: Date.now()}));
+});
+
+/* ═══════════════════════════════════════════════════
+   CONFIRM DIALOG
+   ═══════════════════════════════════════════════════ */
+function showConfirm(title, msg, cancelText, okText, callback) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-cancel-text').textContent = cancelText;
+  document.getElementById('confirm-ok-text').textContent = okText;
+  state.confirmCallback = callback;
+  document.getElementById('confirm-modal').classList.add('show');
+}
+function closeConfirm() { document.getElementById('confirm-modal').classList.remove('show'); state.confirmCallback = null; }
+function confirmAction() { if (state.confirmCallback) state.confirmCallback(); closeConfirm(); }
+
+/* ═══════════════════════════════════════════════════
+   TOAST / SNACKBAR
+   ═══════════════════════════════════════════════════ */
+function showToast(type, msg) {
+  const container = document.getElementById('toast-container');
+  const icons = {success: '✅', warning: '⚠️', info: 'ℹ️'};
+  const toast = document.createElement('div'); toast.className = 'toast ' + type;
+  toast.innerHTML = `<span>${icons[type] || ''}</span> ${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.animation = 'toastOut .3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+function showDemoToast() { showToast('info', '아직 데모 기능이라 곧 준비 예정입니다.'); }
+</script>
+</body>
+</html>
