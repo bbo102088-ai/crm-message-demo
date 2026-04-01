@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEND_00 — 메시지 발송</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #3B6EF8;
+    --primary-light: #EEF3FF;
+    --primary-dark: #2B5CE0;
+    --gray-50: #F8F9FA;
+    --gray-100: #F1F3F5;
+    --gray-200: #E9ECEF;
+    --gray-300: #DEE2E6;
+    --gray-400: #CED4DA;
+    --gray-500: #ADB5BD;
+    --gray-600: #868E96;
+    --gray-700: #495057;
+    --gray-800: #343A40;
+    --gray-900: #212529;
+    --kakao: #FEE500;
+    --kakao-dark: #3C1E1E;
+    --danger: #FA5252;
+    --success: #40C057;
+    --warning: #FD7E14;
+    --radius: 8px;
+    --radius-sm: 4px;
+    --radius-lg: 12px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  }
+
+  body {
+    font-family: -apple-system, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+    background: var(--gray-100);
+    color: var(--gray-900);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* Layout */
+  .app-header {
+    background: #fff;
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-header .logo { font-weight: 700; font-size: 16px; color: var(--primary); }
+  .app-header .page-title { color: var(--gray-600); font-size: 13px; }
+  .app-header .badge { background: var(--primary-light); color: var(--primary); font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; margin-left: auto; }
+
+  .main-layout { display: flex; gap: 16px; padding: 20px 24px; max-width: 1100px; margin: 0 auto; }
+  .form-panel { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .preview-panel { width: 300px; flex-shrink: 0; }
+
+  /* Cards */
+  .card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    padding: 20px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .card-title .step-badge {
+    background: var(--primary);
+    color: #fff;
+    font-size: 10px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Segment Control */
+  .segment-control {
+    display: flex;
+    background: var(--gray-100);
+    border-radius: var(--radius);
+    padding: 3px;
+    gap: 2px;
+  }
+  .segment-btn {
+    flex: 1; padding: 8px 12px;
+    border: none; background: transparent;
+    border-radius: 6px;
+    font-size: 13px; font-weight: 500; color: var(--gray-600);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .segment-btn.active {
+    background: #fff;
+    color: var(--gray-900);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    font-weight: 600;
+  }
+
+  /* Channel Tabs */
+  .channel-tabs { display: flex; border-bottom: 2px solid var(--gray-200); margin-bottom: 16px; }
+  .channel-tab {
+    padding: 10px 20px; font-size: 14px; font-weight: 500;
+    color: var(--gray-500); cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .channel-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+  .channel-tab .tab-icon { font-size: 16px; }
+
+  /* Sender Number */
+  .sender-row { display: flex; align-items: center; gap: 10px; }
+  .sender-select {
+    flex: 1; padding: 9px 12px;
+    border: 1px solid var(--gray-300); border-radius: var(--radius);
+    font-size: 13px; color: var(--gray-900); background: #fff;
+    cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23868E96' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    padding-right: 32px;
+  }
+  .sender-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+  .default-badge { font-size: 10px; background: var(--primary-light); color: var(--primary); padding: 2px 7px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+
+  /* Target Selection */
+  .target-methods { display: flex; flex-direction: column; gap: 8px; }
+  .target-method-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px; border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius); cursor: pointer; background: #fff;
+    transition: all 0.15s; text-align: left;
+  }
+  .target-method-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+  .target-method-btn.active { border-color: var(--primary); background: var(--primary-light); }
+  .target-method-btn .method-icon { font-size: 18px; width: 28px; text-align: center; }
+  .target-method-btn .method-label { font-size: 13px; font-weight: 500; color: var(--gray-800); }
+  .target-method-btn .method-desc { font-size: 11px; color: var(--gray-500); }
+
+  /* Target List */
+  .target-list-area {
+    margin-top: 12px; border: 1px solid var(--gray-200);
+    border-radius: var(--radius); overflow: hidden;
+    display: none;
+  }
+  .target-list-area.visible { display: block; }
+  .target-list-header {
+    background: var(--gray-50); padding: 8px 14px;
+    font-size: 12px; color: var(--gray-600); font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .target-list-body { max-height: 160px; overflow-y: auto; }
+  .target-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 14px; border-bottom: 1px solid var(--gray-100);
+    font-size: 13px;
+  }
+  .target-item:last-child { border-bottom: none; }
+  .target-item-info { display: flex; align-items: center; gap: 8px; }
+  .target-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--primary-light); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600;
+  }
+  .target-item-remove {
+    background: none; border: none; color: var(--gray-400); cursor: pointer;
+    font-size: 16px; line-height: 1; padding: 0 2px;
+  }
+  .target-item-remove:hover { color: var(--danger); }
+  .target-count-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--primary); color: #fff;
+    font-size: 12px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+  }
+
+  /* Search Input */
+  .search-input-row { display: flex; gap: 8px; margin-top: 10px; }
+  .search-input {
+    flex: 1; padding: 9px 12px;
+    border: 1px solid var(--gray-300); border-radius: var(--radius);
+    font-size: 13px; outline: none;
+  }
+  .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+  .btn-search {
+    padding: 9px 16px; background: var(--primary); color: #fff;
+    border: none; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-search:hover { background: var(--primary-dark); }
+
+  /* Message Area */
+  .msg-toolbar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .ad-checkbox-wrap { display: flex; align-items: center; gap: 5px; }
+  .ad-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+  .ad-label { font-size: 13px; color: var(--gray-700); font-weight: 500; }
+  .tooltip-trigger {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--gray-300); color: var(--gray-600);
+    font-size: 10px; font-weight: 700; cursor: help;
+    position: relative;
+  }
+  .tooltip-trigger:hover .tooltip-box { display: block; }
+  .tooltip-box {
+    display: none; position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--gray-800); color: #fff; font-size: 11px;
+    padding: 6px 10px; border-radius: var(--radius-sm); white-space: nowrap; z-index: 10;
+    line-height: 1.4;
+  }
+  .msg-type-badge {
+    margin-left: auto; font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    background: var(--gray-200); color: var(--gray-600);
+  }
+  .msg-type-badge.lms { background: #FFF3CD; color: #856404; }
+
+  .msg-textarea {
+    width: 100%; height: 160px; padding: 12px;
+    border: 1.5px solid var(--gray-200); border-radius: var(--radius);
+    font-size: 13px; line-height: 1.6; resize: none; outline: none;
+    font-family: inherit; transition: border-color 0.15s;
+  }
+  .msg-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+
+  .msg-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 6px;
+  }
+  .byte-counter { font-size: 12px; color: var(--gray-500); }
+  .byte-counter .current { color: var(--gray-900); font-weight: 600; }
+  .byte-counter .over { color: var(--warning); }
+
+  .msg-actions { display: flex; gap: 6px; }
+  .btn-icon {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 12px; border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm); background: #fff;
+    font-size: 12px; color: var(--gray-700); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-icon:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+  .btn-icon.ai { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border-color: transparent; }
+  .btn-icon.ai:hover { opacity: 0.9; }
+
+  /* Image Upload */
+  .image-upload-area {
+    display: flex; gap: 8px; margin-top: 10px;
+  }
+  .image-slot {
+    width: 72px; height: 72px; border: 1.5px dashed var(--gray-300);
+    border-radius: var(--radius); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer;
+    transition: all 0.15s; position: relative; overflow: hidden;
+    background: var(--gray-50);
+  }
+  .image-slot:hover { border-color: var(--primary); background: var(--primary-light); }
+  .image-slot.filled { border-style: solid; border-color: var(--gray-300); }
+  .image-slot .slot-icon { font-size: 20px; color: var(--gray-400); }
+  .image-slot .slot-label { font-size: 10px; color: var(--gray-400); margin-top: 2px; }
+  .image-slot img { width: 100%; height: 100%; object-fit: cover; }
+  .image-slot .remove-img {
+    position: absolute; top: 2px; right: 2px;
+    background: rgba(0,0,0,0.6); color: #fff; border: none;
+    width: 18px; height: 18px; border-radius: 50%; font-size: 10px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Schedule */
+  .schedule-tabs { display: flex; gap: 8px; margin-bottom: 0; }
+  .schedule-tab-btn {
+    flex: 1; padding: 9px; border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius); background: #fff; font-size: 13px;
+    font-weight: 500; color: var(--gray-600); cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .schedule-tab-btn.active {
+    border-color: var(--primary); background: var(--primary-light);
+    color: var(--primary); font-weight: 600;
+  }
+  .schedule-detail { margin-top: 12px; display: none; }
+  .schedule-detail.visible { display: block; }
+
+  /* Calendar */
+  .mini-calendar { border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; }
+  .cal-header {
+    background: var(--primary); color: #fff; padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-weight: 600; font-size: 14px;
+  }
+  .cal-nav { background: none; border: none; color: #fff; cursor: pointer; font-size: 16px; padding: 0 6px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-day-label {
+    padding: 8px 0; text-align: center; font-size: 11px;
+    color: var(--gray-500); font-weight: 600; background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .cal-day-label:first-child { color: var(--danger); }
+  .cal-day-label:last-child { color: var(--primary); }
+  .cal-day {
+    padding: 8px 0; text-align: center; font-size: 12px;
+    cursor: pointer; border-radius: var(--radius-sm); transition: all 0.1s;
+    color: var(--gray-700);
+  }
+  .cal-day:hover:not(.disabled):not(.empty) { background: var(--primary-light); color: var(--primary); }
+  .cal-day.disabled { color: var(--gray-300); cursor: not-allowed; }
+  .cal-day.selected { background: var(--primary); color: #fff; border-radius: 50%; }
+  .cal-day.today { font-weight: 700; }
+  .cal-day.empty { cursor: default; }
+
+  .time-picker {
+    display: flex; align-items: center; gap: 8px; margin-top: 12px;
+    background: var(--gray-50); border: 1px solid var(--gray-200);
+    border-radius: var(--radius); padding: 12px;
+  }
+  .time-segment-ctrl { display: flex; background: var(--gray-200); border-radius: var(--radius-sm); overflow: hidden; }
+  .time-seg-btn {
+    padding: 6px 12px; border: none; background: transparent; cursor: pointer;
+    font-size: 12px; font-weight: 500; color: var(--gray-600); transition: all 0.15s;
+  }
+  .time-seg-btn.active { background: #fff; color: var(--gray-900); font-weight: 600; }
+  .time-inputs { display: flex; align-items: center; gap: 4px; margin-left: 8px; }
+  .time-input {
+    width: 44px; padding: 6px 8px; text-align: center;
+    border: 1px solid var(--gray-300); border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600; outline: none;
+  }
+  .time-input:focus { border-color: var(--primary); }
+  .time-colon { font-weight: 700; color: var(--gray-600); }
+  .selected-datetime-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--primary-light); color: var(--primary);
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    margin-top: 10px;
+  }
+
+  /* Send Button */
+  .send-btn-area { padding-top: 4px; }
+  .btn-send {
+    width: 100%; padding: 14px;
+    background: var(--primary); color: #fff; border: none;
+    border-radius: var(--radius); font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    letter-spacing: -0.3px;
+  }
+  .btn-send:hover { background: var(--primary-dark); box-shadow: 0 4px 12px rgba(59,110,248,0.35); }
+  .btn-send:active { transform: scale(0.98); }
+  .btn-send .send-icon { font-size: 18px; }
+
+  /* Preview Panel */
+  .preview-sticky { position: sticky; top: 72px; }
+  .phone-frame {
+    width: 260px; margin: 0 auto;
+    background: #1a1a1a; border-radius: 36px; padding: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .phone-screen {
+    background: #f0f0f0; border-radius: 28px; overflow: hidden;
+    min-height: 440px; position: relative;
+  }
+  .phone-status { background: #1a1a1a; padding: 12px 20px 6px; display: flex; justify-content: space-between; align-items: center; }
+  .phone-time { color: #fff; font-size: 12px; font-weight: 600; }
+  .phone-icons { color: #fff; font-size: 12px; }
+  .phone-msg-area { padding: 16px 12px; }
+  .phone-msg-bubble {
+    background: #fff; border-radius: var(--radius);
+    padding: 10px 12px; font-size: 12px; line-height: 1.5; color: var(--gray-900);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08); max-width: 90%;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .phone-sender { font-size: 10px; color: var(--gray-500); margin-bottom: 4px; }
+  .phone-timestamp { font-size: 10px; color: var(--gray-400); margin-top: 6px; text-align: right; }
+  .kakao-preview { background: #b2c7d4; min-height: 440px; }
+  .kakao-msg-bubble {
+    background: #fff; border-radius: 0 var(--radius) var(--radius) var(--radius);
+    padding: 10px 12px; font-size: 12px; line-height: 1.5;
+    max-width: 90%; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  /* Saved Conditions Dropdown */
+  .saved-conditions-wrap { position: relative; margin-top: 8px; }
+  .saved-cond-trigger {
+    width: 100%; padding: 9px 12px;
+    border: 1px solid var(--gray-300); border-radius: var(--radius);
+    background: #fff; font-size: 13px; color: var(--gray-700);
+    display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .saved-cond-trigger:hover { border-color: var(--primary); }
+  .saved-cond-list {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: #fff; border: 1px solid var(--gray-200);
+    border-radius: var(--radius); box-shadow: var(--shadow-lg);
+    z-index: 20; display: none;
+  }
+  .saved-cond-list.open { display: block; }
+  .saved-cond-item {
+    padding: 10px 14px; font-size: 13px; color: var(--gray-800);
+    cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .saved-cond-item:last-child { border-bottom: none; }
+  .saved-cond-item:hover { background: var(--gray-50); }
+  .saved-cond-item .cond-meta { font-size: 11px; color: var(--gray-400); }
+  .saved-cond-empty { padding: 24px; text-align: center; color: var(--gray-400); font-size: 13px; }
+
+  /* Snackbar */
+  .snackbar-wrap { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .snackbar {
+    background: var(--gray-800); color: #fff; padding: 12px 20px;
+    border-radius: 100px; font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow-lg); white-space: nowrap;
+    animation: slideUp 0.25s ease, fadeOut 0.3s ease 2.7s forwards;
+    pointer-events: auto;
+  }
+  .snackbar.success { background: #1B7A38; }
+  .snackbar.error { background: #C0392B; }
+  .snackbar.warning { background: var(--warning); color: #fff; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center; z-index: 500;
+    display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff; border-radius: var(--radius-lg); padding: 28px 24px;
+    width: 360px; box-shadow: var(--shadow-lg);
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .modal-desc { font-size: 13px; color: var(--gray-600); line-height: 1.6; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 8px; }
+  .btn-modal {
+    flex: 1; padding: 10px; border-radius: var(--radius); font-size: 13px;
+    font-weight: 600; cursor: pointer; border: 1.5px solid var(--gray-200);
+    background: #fff; color: var(--gray-700); transition: all 0.15s;
+  }
+  .btn-modal.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn-modal:hover { opacity: 0.85; }
+
+  /* Temp Save Banner */
+  .temp-banner {
+    background: linear-gradient(90deg, #EEF3FF, #F3EFFF);
+    border: 1px solid var(--primary-light); border-radius: var(--radius);
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+    margin-bottom: 4px; display: none;
+  }
+  .temp-banner.visible { display: flex; }
+  .temp-banner-text { font-size: 12px; color: var(--gray-700); flex: 1; }
+  .temp-banner-text strong { color: var(--primary); }
+  .btn-restore { font-size: 12px; color: var(--primary); font-weight: 600; cursor: pointer; border: none; background: none; text-decoration: underline; }
+
+  /* Section divider */
+  .section-number { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 11px; font-weight: 700; }
+
+  /* Kakao Specifics */
+  .kakao-form-info { background: #FFF9C4; border: 1px solid var(--kakao); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: #5D4037; line-height: 1.5; }
+
+  /* Responsive */
+  @media (max-width: 800px) {
+    .main-layout { flex-direction: column; }
+    .preview-panel { width: 100%; }
+    .preview-sticky { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="app-header">
+  <span class="logo">의사랑 CRM</span>
+  <span style="color:var(--gray-300)">›</span>
+  <span class="page-title">메시지 발송</span>
+  <span class="badge">SEND_00 v1.4.5</span>
+</div>
+
+<!-- Snackbar Container -->
+<div class="snackbar-wrap" id="snackbarWrap"></div>
+
+<!-- Modal: 임시저장 불러오기 -->
+<div class="modal-overlay" id="modalRestore">
+  <div class="modal-box">
+    <div class="modal-title">임시 저장된 메시지</div>
+    <div class="modal-desc">임시 저장된 메시지가 있습니다.<br>불러오시겠습니까?</div>
+    <div class="modal-actions">
+      <button class="btn-modal" onclick="closeModal('modalRestore'); resetForm();">새로 작성</button>
+      <button class="btn-modal primary" onclick="closeModal('modalRestore'); restoreDraft();">불러오기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 대용량 발송 확인 -->
+<div class="modal-overlay" id="modalBulk">
+  <div class="modal-box">
+    <div class="modal-title">대용량 발송 확인</div>
+    <div class="modal-desc">선택된 발송 대상이 많습니다.<br>환경설정에 등록된 대용량 발송 정책을 적용하여 발송하시겠습니까?</div>
+    <div class="modal-actions">
+      <button class="btn-modal" onclick="closeModal('modalBulk')">취소</button>
+      <button class="btn-modal primary" onclick="closeModal('modalBulk'); sendSuccess();">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: LMS/MMS 확인 -->
+<div class="modal-overlay" id="modalLms">
+  <div class="modal-box">
+    <div class="modal-title">LMS 발송 확인</div>
+    <div class="modal-desc">작성하신 메시지가 LMS로 발송됩니다.<br>LMS 건당 요금이 부과될 수 있습니다. 계속 진행하시겠습니까?</div>
+    <div class="modal-actions">
+      <button class="btn-modal" onclick="closeModal('modalLms')">취소</button>
+      <button class="btn-modal primary" onclick="closeModal('modalLms'); sendSuccess();">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 예약어 포함 SMS→LMS -->
+<div class="modal-overlay" id="modalKeyword">
+  <div class="modal-box">
+    <div class="modal-title">메시지 유형 전환 안내</div>
+    <div class="modal-desc">입력하신 내용에 예약어가 포함되어<br>SMS에서 LMS로 자동 전환됩니다. 계속 진행하시겠습니까?</div>
+    <div class="modal-actions">
+      <button class="btn-modal" onclick="closeModal('modalKeyword')">취소</button>
+      <button class="btn-modal primary" onclick="closeModal('modalKeyword'); sendSuccess();">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 발신번호 없음 -->
+<div class="modal-overlay" id="modalNoSender">
+  <div class="modal-box">
+    <div class="modal-title">발신번호 미등록</div>
+    <div class="modal-desc">등록된 발신번호가 없습니다.<br>환경설정에서 발신번호를 등록해주세요.</div>
+    <div class="modal-actions">
+      <button class="btn-modal" onclick="closeModal('modalNoSender')">넘어가기</button>
+      <button class="btn-modal primary" onclick="closeModal('modalNoSender')">CRM 환경설정</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Layout -->
+<div class="main-layout">
+  <!-- Left: Form Panel -->
+  <div class="form-panel">
+
+    <!-- Temp Save Banner -->
+    <div class="temp-banner" id="tempBanner">
+      <span style="font-size:16px">💾</span>
+      <span class="temp-banner-text">7일 이내 임시 저장된 메시지가 있습니다. (<strong>2026-03-28 오전 10:32</strong>)</span>
+      <button class="btn-restore" onclick="openModal('modalRestore')">불러오기</button>
+    </div>
+
+    <!-- 1. 발신번호 선택 -->
+    <div class="card">
+      <div class="card-title"><span class="step-badge">1</span> 발신번호 선택</div>
+      <div class="sender-row">
+        <select class="sender-select" id="senderSelect" onchange="updatePreview()">
+          <option value="010-1234-5678">010-1234-5678</option>
+          <option value="02-1234-5678">02-1234-5678</option>
+          <option value="031-456-7890">031-456-7890</option>
+        </select>
+        <span class="default-badge">기본</span>
+      </div>
+    </div>
+
+    <!-- 2. 채널 선택 + 메시지 작성 -->
+    <div class="card">
+      <div class="card-title"><span class="step-badge">2</span> 채널 선택</div>
+      <div class="channel-tabs">
+        <div class="channel-tab active" id="tabSms" onclick="switchChannel('sms')">
+          <span class="tab-icon">💬</span> 문자 (SMS/LMS)
+        </div>
+        <div class="channel-tab" id="tabKakao" onclick="switchChannel('kakao')">
+          <span class="tab-icon">💛</span> 카카오톡
+        </div>
+      </div>
+
+      <!-- SMS Form -->
+      <div id="smsForm">
+        <div class="msg-toolbar">
+          <div class="ad-checkbox-wrap">
+            <input type="checkbox" class="ad-checkbox" id="adCheck" onchange="toggleAd()">
+            <label class="ad-label" for="adCheck">광고성</label>
+            <span class="tooltip-trigger">?
+              <span class="tooltip-box">광고성 문자는 수신 동의한 대상자에게만 발송됩니다.<br>야간(21시~익일 8시)에는 발송이 제한됩니다.</span>
+            </span>
+          </div>
+          <span class="msg-type-badge" id="msgTypeBadge">SMS</span>
+          <div class="msg-actions" style="margin-left:auto">
+            <button class="btn-icon ai" onclick="aiWrite()">✨ AI 작성</button>
+            <button class="btn-icon" onclick="document.getElementById('imageInput').click()">📎 이미지 추가</button>
+            <input type="file" id="imageInput" accept="image/jpeg,image/png" multiple style="display:none" onchange="handleImageUpload(event)">
+          </div>
+        </div>
+
+        <!-- 이미지 미리보기 -->
+        <div class="image-upload-area" id="imageUploadArea">
+          <div class="image-slot" id="imgSlot0" onclick="triggerImageUpload(0)">
+            <span class="slot-icon">+</span>
+            <span class="slot-label">이미지 1</span>
+          </div>
+          <div class="image-slot" id="imgSlot1" onclick="triggerImageUpload(1)" style="opacity:0.4;pointer-events:none">
+            <span class="slot-icon">+</span>
+            <span class="slot-label">이미지 2</span>
+          </div>
+          <div class="image-slot" id="imgSlot2" onclick="triggerImageUpload(2)" style="opacity:0.4;pointer-events:none">
+            <span class="slot-icon">+</span>
+            <span class="slot-label">이미지 3</span>
+          </div>
+        </div>
+
+        <div id="adPrefix" style="display:none;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:8px 12px;margin-bottom:6px;font-size:12px;color:var(--gray-600)">(광고) 수신 거부: 080-XXX-XXXX</div>
+
+        <textarea class="msg-textarea" id="msgTextarea" placeholder="메시지 내용을 입력하세요." oninput="onMsgInput()" maxlength="2000"></textarea>
+        <div class="msg-footer">
+          <span class="byte-counter">
+            <span class="current" id="byteCount">0</span>
+            <span id="byteTotal"> / 90 byte (SMS)</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Kakao Form -->
+      <div id="kakaoForm" style="display:none">
+        <div class="kakao-form-info">
+          카카오 비즈메시지는 카카오채널에 연결된 친구에게만 발송됩니다.<br>
+          템플릿 심사 승인 후 발송 가능합니다.
+        </div>
+        <textarea class="msg-textarea" id="kakaoTextarea" placeholder="카카오 알림톡 메시지를 입력하세요." oninput="updatePreview()" style="margin-top:12px" maxlength="1000"></textarea>
+        <div class="msg-footer">
+          <span class="byte-counter">
+            <span class="current" id="kakaoByteCount">0</span> / 1000 자
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 발송 대상 선택 -->
+    <div class="card">
+      <div class="card-title"><span class="step-badge">3</span> 발송 대상 선택</div>
+      <div class="target-methods">
+        <button class="target-method-btn" id="method_condition" onclick="selectMethod('condition')">
+          <span class="method-icon">⚙️</span>
+          <div>
+            <div class="method-label">조건 선택</div>
+            <div class="method-desc">연령, 진료과, 최근 내원일 등 조건으로 필터링</div>
+          </div>
+        </button>
+        <button class="target-method-btn" id="method_manual" onclick="selectMethod('manual')">
+          <span class="method-icon">✏️</span>
+          <div>
+            <div class="method-label">직접 입력 (수기 선택)</div>
+            <div class="method-desc">환자 이름 또는 연락처로 직접 검색 후 선택</div>
+          </div>
+        </button>
+        <button class="target-method-btn" id="method_group" onclick="selectMethod('group')">
+          <span class="method-icon">👥</span>
+          <div>
+            <div class="method-label">소모로 선택</div>
+            <div class="method-desc">기존 발송 그룹에서 선택</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 직접 입력 영역 -->
+      <div id="manualInputArea" style="display:none">
+        <div class="search-input-row">
+          <input class="search-input" type="text" id="patientSearch" placeholder="환자 이름 또는 연락처 입력" onkeydown="if(event.key==='Enter') searchPatient()">
+          <button class="btn-search" onclick="searchPatient()">검색</button>
+        </div>
+        <div id="searchResults" style="display:none; margin-top:8px; border:1px solid var(--gray-200); border-radius:var(--radius); overflow:hidden;"></div>
+      </div>
+
+      <!-- 조건 선택 영역 -->
+      <div id="conditionArea" style="display:none; margin-top:10px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select class="sender-select" style="width:auto;flex:1" onchange="updateTargetCount()">
+            <option value="">-- 진료과 선택 --</option>
+            <option>내과</option><option>외과</option><option>소아과</option><option>피부과</option>
+          </select>
+          <select class="sender-select" style="width:auto;flex:1" onchange="updateTargetCount()">
+            <option value="">-- 최근 내원일 --</option>
+            <option>1개월 이내</option><option>3개월 이내</option><option>6개월 이내</option><option>1년 이내</option>
+          </select>
+          <select class="sender-select" style="width:auto;flex:1" onchange="updateTargetCount()">
+            <option value="">-- 연령대 --</option>
+            <option>20대</option><option>30대</option><option>40대</option><option>50대</option><option>60대+</option>
+          </select>
+        </div>
+        <div class="saved-conditions-wrap">
+          <div class="saved-cond-trigger" onclick="toggleSavedCond()">
+            <span>저장한 조건 선택</span> <span>▾</span>
+          </div>
+          <div class="saved-cond-list" id="savedCondList">
+            <div class="saved-cond-item" ondblclick="applyCond('내과 3개월 이내')">
+              <span>내과 3개월 이내 환자</span><span class="cond-meta">2025-12-10 저장</span>
+            </div>
+            <div class="saved-cond-item" ondblclick="applyCond('피부과 여성 40대')">
+              <span>피부과 여성 40대</span><span class="cond-meta">2026-01-05 저장</span>
+            </div>
+            <div class="saved-cond-item" ondblclick="applyCond('소아과 1년 이내')">
+              <span>소아과 1년 이내 방문</span><span class="cond-meta">2026-02-20 저장</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 소모로 선택 -->
+      <div id="groupArea" style="display:none; margin-top:10px;">
+        <select class="sender-select" style="width:100%" onchange="selectGroup(this.value)">
+          <option value="">-- 발송 그룹 선택 --</option>
+          <option value="128">VIP 환자 그룹 (128명)</option>
+          <option value="57">정기검진 알림 (57명)</option>
+          <option value="234">2026년 신규 환자 (234명)</option>
+        </select>
+      </div>
+
+      <!-- 선택된 대상 목록 -->
+      <div class="target-list-area" id="targetListArea">
+        <div class="target-list-header">
+          <span>선택된 대상</span>
+          <span class="target-count-chip"><span id="targetCount">0</span>명</span>
+        </div>
+        <div class="target-list-body" id="targetListBody"></div>
+      </div>
+    </div>
+
+    <!-- 4. 발송 시간 선택 -->
+    <div class="card">
+      <div class="card-title"><span class="step-badge">4</span> 발송 시간 선택</div>
+      <div class="schedule-tabs">
+        <button class="schedule-tab-btn active" id="scheduleNow" onclick="selectSchedule('now')">
+          ⚡ 즉시 발송
+        </button>
+        <button class="schedule-tab-btn" id="scheduleReserve" onclick="selectSchedule('reserve')">
+          📅 예약 발송
+        </button>
+      </div>
+      <div class="schedule-detail" id="scheduleDetail">
+        <div class="mini-calendar" id="miniCalendar">
+          <div class="cal-header">
+            <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+            <span id="calMonthLabel"></span>
+            <button class="cal-nav" onclick="changeMonth(1)">›</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="time-picker" id="timePicker" style="display:none">
+          <div class="time-segment-ctrl">
+            <button class="time-seg-btn active" id="btnAm" onclick="selectAmPm('am')">오전</button>
+            <button class="time-seg-btn" id="btnPm" onclick="selectAmPm('pm')">오후</button>
+          </div>
+          <div class="time-inputs">
+            <input class="time-input" id="hourInput" type="number" min="1" max="12" value="10" oninput="updatePreview()">
+            <span class="time-colon">:</span>
+            <input class="time-input" id="minInput" type="number" min="0" max="59" value="00" oninput="updatePreview()">
+          </div>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button class="btn-modal" style="padding:6px 12px;font-size:12px" onclick="cancelTime()">취소</button>
+            <button class="btn-modal primary" style="padding:6px 12px;font-size:12px" onclick="confirmTime()">확인</button>
+          </div>
+        </div>
+        <div id="selectedDatetimeChip" style="display:none">
+          <div class="selected-datetime-chip">📅 <span id="selectedDatetimeText"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 발송하기 -->
+    <div class="card send-btn-area">
+      <button class="btn-send" onclick="handleSend()">
+        <span class="send-icon">📤</span> 발송하기
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Right: Preview Panel -->
+  <div class="preview-panel">
+    <div class="preview-sticky">
+      <div class="card" style="padding:16px">
+        <div class="card-title" style="margin-bottom:12px">미리보기</div>
+        <div class="phone-frame">
+          <div class="phone-screen" id="phoneScreen">
+            <div class="phone-status">
+              <span class="phone-time">10:32</span>
+              <span class="phone-icons">▲ ◉ ⬛</span>
+            </div>
+            <div class="phone-msg-area" id="phoneMsgArea">
+              <div class="phone-sender" id="phoneSender">010-1234-5678</div>
+              <div class="phone-msg-bubble" id="phoneMsgBubble">메시지를 입력하면 미리보기가 표시됩니다.</div>
+              <div class="phone-timestamp" id="phoneTimestamp">즉시 발송</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 발송 요약 -->
+      <div class="card" style="margin-top:12px; padding:16px">
+        <div class="card-title" style="margin-bottom:10px">발송 요약</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--gray-500)">채널</span>
+            <span id="summaryChannel" style="font-weight:600">SMS</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--gray-500)">발신번호</span>
+            <span id="summarySender" style="font-weight:600">010-1234-5678</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--gray-500)">발송 대상</span>
+            <span id="summaryTarget" style="font-weight:600">0명</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--gray-500)">발송 유형</span>
+            <span id="summaryType" style="font-weight:600">SMS</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--gray-500)">발송 시간</span>
+            <span id="summaryTime" style="font-weight:600">즉시 발송</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--gray-500)">광고성</span>
+            <span id="summaryAd" style="font-weight:600">아니오</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+let state = {
+  channel: 'sms',
+  schedule: 'now',
+  isAd: false,
+  targets: [],
+  selectedDate: null,
+  selectedTime: null,
+  ampm: 'am',
+  images: [null, null, null],
+  calYear: 0,
+  calMonth: 0,
+};
+
+const PATIENTS = [
+  { id: 1, name: '김민준', phone: '010-2345-6789', dept: '내과' },
+  { id: 2, name: '이서연', phone: '010-3456-7890', dept: '피부과' },
+  { id: 3, name: '박도현', phone: '010-4567-8901', dept: '소아과' },
+  { id: 4, name: '최수아', phone: '010-5678-9012', dept: '외과' },
+  { id: 5, name: '정예준', phone: '010-6789-0123', dept: '내과' },
+  { id: 6, name: '윤지아', phone: '010-7890-1234', dept: '피부과' },
+];
+
+// ── Init ───────────────────────────────────────────────
+window.onload = () => {
+  const now = new Date();
+  state.calYear = now.getFullYear();
+  state.calMonth = now.getMonth();
+  renderCalendar();
+  updatePreview();
+  // 임시저장 배너 (시뮬레이션)
+  setTimeout(() => {
+    document.getElementById('tempBanner').classList.add('visible');
+  }, 800);
+};
+
+// ── Channel Switch ─────────────────────────────────────
+function switchChannel(ch) {
+  if (state.channel === ch) return;
+  state.channel = ch;
+  document.getElementById('tabSms').classList.toggle('active', ch === 'sms');
+  document.getElementById('tabKakao').classList.toggle('active', ch === 'kakao');
+  document.getElementById('smsForm').style.display = ch === 'sms' ? 'block' : 'none';
+  document.getElementById('kakaoForm').style.display = ch === 'kakao' ? 'block' : 'none';
+  document.getElementById('phoneScreen').style.background = ch === 'kakao' ? '#b2c7d4' : '#f0f0f0';
+  document.getElementById('phoneMsgBubble').className = ch === 'kakao' ? 'kakao-msg-bubble' : 'phone-msg-bubble';
+  // 내용 초기화
+  if (ch === 'sms') {
+    document.getElementById('kakaoTextarea').value = '';
+    document.getElementById('kakaoByteCount').textContent = '0';
+  } else {
+    document.getElementById('msgTextarea').value = '';
+    document.getElementById('byteCount').textContent = '0';
+  }
+  updatePreview();
+  showSnackbar('채널이 변경되어 작성 내용이 초기화되었습니다.', 'warning');
+}
+
+// ── Sender Number ──────────────────────────────────────
+function onSenderChange() { updatePreview(); }
+
+// ── Message Input ──────────────────────────────────────
+function getBytes(str) {
+  let b = 0;
+  for (let c of str) { b += c.charCodeAt(0) > 127 ? 2 : 1; }
+  return b;
+}
+
+function onMsgInput() {
+  const txt = document.getElementById('msgTextarea').value;
+  const bytes = getBytes(txt);
+  document.getElementById('byteCount').textContent = bytes;
+  const isLms = bytes > 90 || state.images.some(i => i !== null);
+  const badge = document.getElementById('msgTypeBadge');
+  badge.textContent = isLms ? 'LMS' : 'SMS';
+  badge.className = 'msg-type-badge' + (isLms ? ' lms' : '');
+  document.getElementById('byteTotal').textContent = isLms
+    ? ' / 2,000 byte (LMS)' : ' / 90 byte (SMS)';
+  updatePreview();
+}
+
+function toggleAd() {
+  state.isAd = document.getElementById('adCheck').checked;
+  document.getElementById('adPrefix').style.display = state.isAd ? 'block' : 'none';
+  document.getElementById('summaryAd').textContent = state.isAd ? '예' : '아니오';
+  updatePreview();
+}
+
+// ── AI Write ───────────────────────────────────────────
+function aiWrite() {
+  const ta = state.channel === 'sms'
+    ? document.getElementById('msgTextarea')
+    : document.getElementById('kakaoTextarea');
+  ta.value = '안녕하세요, 의원입니다.\n정기 건강검진을 예약하시면 10% 할인 혜택을 드립니다.\n지금 바로 예약하세요!';
+  if (state.channel === 'sms') onMsgInput();
+  else {
+    document.getElementById('kakaoByteCount').textContent = ta.value.length;
+    updatePreview();
+  }
+  showSnackbar('AI가 메시지를 작성했습니다.', 'success');
+}
+
+// ── Image Upload ───────────────────────────────────────
+let currentSlot = 0;
+function triggerImageUpload(slot) { currentSlot = slot; document.getElementById('imageInput').click(); }
+function handleImageUpload(e) {
+  const files = Array.from(e.target.files);
+  files.forEach((f, i) => {
+    const slot = (currentSlot + i);
+    if (slot >= 3) return;
+    if (f.size > 5 * 1024 * 1024) { showSnackbar(`이미지 크기는 5MB 이하여야 합니다.`, 'error'); return; }
+    const url = URL.createObjectURL(f);
+    state.images[slot] = url;
+    const el = document.getElementById(`imgSlot${slot}`);
+    el.innerHTML = `<img src="${url}" alt="image"><button class="remove-img" onclick="removeImage(event,${slot})">✕</button>`;
+    el.classList.add('filled');
+    // Unlock next slot
+    if (slot < 2) {
+      const next = document.getElementById(`imgSlot${slot+1}`);
+      next.style.opacity = '1'; next.style.pointerEvents = 'auto';
+    }
+  });
+  e.target.value = '';
+  onMsgInput();
+}
+function removeImage(e, slot) {
+  e.stopPropagation();
+  state.images[slot] = null;
+  const el = document.getElementById(`imgSlot${slot}`);
+  const labels = ['이미지 1','이미지 2','이미지 3'];
+  el.innerHTML = `<span class="slot-icon">+</span><span class="slot-label">${labels[slot]}</span>`;
+  el.classList.remove('filled');
+  onMsgInput();
+}
+
+// ── Target Selection ───────────────────────────────────
+function selectMethod(method) {
+  ['condition','manual','group'].forEach(m => {
+    document.getElementById(`method_${m}`).classList.toggle('active', m === method);
+  });
+  document.getElementById('manualInputArea').style.display = method === 'manual' ? 'block' : 'none';
+  document.getElementById('conditionArea').style.display = method === 'condition' ? 'block' : 'none';
+  document.getElementById('groupArea').style.display = method === 'group' ? 'block' : 'none';
+  if (method !== 'manual') { state.targets = []; renderTargetList(); }
+}
+
+function searchPatient() {
+  const q = document.getElementById('patientSearch').value.trim();
+  const results = q
+    ? PATIENTS.filter(p => p.name.includes(q) || p.phone.includes(q))
+    : PATIENTS;
+  const container = document.getElementById('searchResults');
+  if (results.length === 0) {
+    container.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray-400);font-size:13px">검색 결과가 없습니다.</div>';
+  } else {
+    container.innerHTML = results.map(p =>
+      `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--gray-100);font-size:13px;cursor:pointer" onclick="addTarget(${p.id})">
+        <div><strong>${p.name}</strong> <span style="color:var(--gray-500)">${p.phone}</span></div>
+        <span style="font-size:11px;color:var(--gray-400)">${p.dept}</span>
+      </div>`
+    ).join('');
+  }
+  container.style.display = 'block';
+}
+
+function addTarget(id) {
+  if (state.targets.find(t => t.id === id)) { showSnackbar('이미 추가된 대상입니다.'); return; }
+  const p = PATIENTS.find(p => p.id === id);
+  state.targets.push(p);
+  renderTargetList();
+  document.getElementById('patientSearch').value = '';
+  document.getElementById('searchResults').style.display = 'none';
+}
+
+function removeTarget(id) {
+  state.targets = state.targets.filter(t => t.id !== id);
+  renderTargetList();
+}
+
+function updateTargetCount() {
+  const count = Math.floor(Math.random() * 200) + 30;
+  state.targets = Array.from({length: count}, (_, i) => ({id: i, name: `환자${i+1}`, phone: '', dept: ''}));
+  renderTargetList(true);
+}
+
+function selectGroup(val) {
+  if (!val) { state.targets = []; renderTargetList(); return; }
+  const count = parseInt(val);
+  state.targets = Array.from({length: count}, (_, i) => ({id: i, name: `환자${i+1}`, phone: '', dept: ''}));
+  renderTargetList(true);
+}
+
+function applyCond(name) {
+  toggleSavedCond();
+  showSnackbar(`"${name}" 조건을 적용했습니다.`, 'success');
+  updateTargetCount();
+}
+
+function renderTargetList(summary = false) {
+  const area = document.getElementById('targetListArea');
+  const body = document.getElementById('targetListBody');
+  const countEl = document.getElementById('targetCount');
+  const count = state.targets.length;
+  countEl.textContent = count;
+  document.getElementById('summaryTarget').textContent = `${count}명`;
+  if (count === 0) { area.classList.remove('visible'); return; }
+  area.classList.add('visible');
+  if (summary || count > 10) {
+    body.innerHTML = `<div style="padding:12px 14px;font-size:13px;color:var(--gray-600)">총 <strong style="color:var(--gray-900)">${count}명</strong>이 선택되었습니다.</div>`;
+  } else {
+    body.innerHTML = state.targets.map(t =>
+      `<div class="target-item">
+        <div class="target-item-info">
+          <div class="target-avatar">${t.name.charAt(0)}</div>
+          <div><div>${t.name}</div><div style="font-size:11px;color:var(--gray-400)">${t.phone}</div></div>
+        </div>
+        <button class="target-item-remove" onclick="removeTarget(${t.id})">✕</button>
+      </div>`
+    ).join('');
+  }
+  updatePreview();
+}
+
+// ── Saved Conditions ───────────────────────────────────
+function toggleSavedCond() {
+  document.getElementById('savedCondList').classList.toggle('open');
+}
+
+// ── Schedule ───────────────────────────────────────────
+function selectSchedule(type) {
+  state.schedule = type;
+  document.getElementById('scheduleNow').classList.toggle('active', type === 'now');
+  document.getElementById('scheduleReserve').classList.toggle('active', type === 'reserve');
+  document.getElementById('scheduleDetail').classList.toggle('visible', type === 'reserve');
+  document.getElementById('summaryTime').textContent = type === 'now' ? '즉시 발송' : (state.selectedDate ? getDatetimeStr() : '날짜 미선택');
+  updatePreview();
+}
+
+// ── Calendar ───────────────────────────────────────────
+const DAYS = ['일','월','화','수','목','금','토'];
+const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+function changeMonth(d) {
+  state.calMonth += d;
+  if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+  if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const label = document.getElementById('calMonthLabel');
+  label.textContent = `${state.calYear}년 ${MONTHS[state.calMonth]}`;
+  const grid = document.getElementById('calGrid');
+  const today = new Date();
+  const minDate = new Date(today); minDate.setDate(today.getDate() + 3);
+  const firstDay = new Date(state.calYear, state.calMonth, 1).getDay();
+  const daysInMonth = new Date(state.calYear, state.calMonth + 1, 0).getDate();
+  let html = DAYS.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(state.calYear, state.calMonth, d);
+    const isDisabled = date < minDate;
+    const isSelected = state.selectedDate &&
+      state.selectedDate.getFullYear() === state.calYear &&
+      state.selectedDate.getMonth() === state.calMonth &&
+      state.selectedDate.getDate() === d;
+    const isToday = date.toDateString() === today.toDateString();
+    const cls = ['cal-day', isDisabled ? 'disabled' : '', isSelected ? 'selected' : '', isToday ? 'today' : ''].join(' ');
+    html += `<div class="${cls}" onclick="${isDisabled ? '' : `selectDate(${state.calYear},${state.calMonth},${d})`}">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function selectDate(y, m, d) {
+  state.selectedDate = new Date(y, m, d);
+  state.selectedTime = null;
+  document.getElementById('timePicker').style.display = 'flex';
+  document.getElementById('selectedDatetimeChip').style.display = 'none';
+  renderCalendar();
+}
+
+function selectAmPm(v) {
+  state.ampm = v;
+  document.getElementById('btnAm').classList.toggle('active', v === 'am');
+  document.getElementById('btnPm').classList.toggle('active', v === 'pm');
+}
+
+function cancelTime() {
+  document.getElementById('timePicker').style.display = 'none';
+  state.selectedDate = null;
+  renderCalendar();
+}
+
+function confirmTime() {
+  const h = document.getElementById('hourInput').value;
+  const m = document.getElementById('minInput').value;
+  state.selectedTime = `${state.ampm === 'am' ? '오전' : '오후'} ${h.padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+  document.getElementById('timePicker').style.display = 'none';
+  document.getElementById('selectedDatetimeChip').style.display = 'block';
+  document.getElementById('selectedDatetimeText').textContent = getDatetimeStr();
+  document.getElementById('summaryTime').textContent = getDatetimeStr();
+  updatePreview();
+}
+
+function getDatetimeStr() {
+  if (!state.selectedDate) return '';
+  const d = state.selectedDate;
+  const dayNames = ['일','월','화','수','목','금','토'];
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} (${dayNames[d.getDay()]}) ${state.selectedTime || ''}`;
+}
+
+// ── Preview Update ─────────────────────────────────────
+function updatePreview() {
+  const sender = document.getElementById('senderSelect').value;
+  const txt = state.channel === 'sms'
+    ? document.getElementById('msgTextarea').value
+    : document.getElementById('kakaoTextarea').value;
+  const adPrefix = state.isAd ? '(광고)\n' : '';
+  const displayTxt = txt || '메시지를 입력하면 미리보기가 표시됩니다.';
+  document.getElementById('phoneSender').textContent = sender;
+  document.getElementById('phoneMsgBubble').textContent = adPrefix + displayTxt;
+  document.getElementById('phoneTimestamp').textContent =
+    state.schedule === 'now' ? '즉시 발송' : (state.selectedDate ? getDatetimeStr() : '예약 발송');
+  document.getElementById('summaryChannel').textContent = state.channel === 'sms' ? 'SMS/LMS' : '카카오톡';
+  document.getElementById('summarySender').textContent = sender;
+  const badge = document.getElementById('msgTypeBadge');
+  document.getElementById('summaryType').textContent = badge ? badge.textContent : 'SMS';
+}
+
+// ── Send ───────────────────────────────────────────────
+function handleSend() {
+  const targets = state.targets.length;
+  const txt = state.channel === 'sms'
+    ? document.getElementById('msgTextarea').value
+    : document.getElementById('kakaoTextarea').value;
+  if (targets === 0) { showSnackbar('보낼 대상을 선택해주세요.', 'error'); return; }
+  if (!txt.trim()) { showSnackbar('메시지를 입력해주세요.', 'error'); return; }
+  const hour = new Date().getHours();
+  if (state.isAd && state.schedule === 'now' && (hour >= 21 || hour < 8)) {
+    showSnackbar('광고는 야간 시간대를 제외한 다음날 오전 8시부터 보낼 수 있습니다.', 'warning'); return;
+  }
+  if (targets > 500) { openModal('modalBulk'); return; }
+  const bytes = getBytes(txt);
+  const isLms = bytes > 90 || state.images.some(i => i !== null);
+  if (isLms && state.channel === 'sms') { openModal('modalLms'); return; }
+  sendSuccess();
+}
+
+function sendSuccess() {
+  const msg = state.schedule === 'now' ? '메시지가 즉시 발송되었습니다.' : '메시지가 예약 발송 등록되었습니다.';
+  showSnackbar(msg, 'success');
+}
+
+// ── Modal ──────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── Snackbar ───────────────────────────────────────────
+function showSnackbar(msg, type = '') {
+  const wrap = document.getElementById('snackbarWrap');
+  const el = document.createElement('div');
+  el.className = `snackbar ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3100);
+}
+
+// ── Draft ──────────────────────────────────────────────
+function resetForm() {
+  document.getElementById('msgTextarea').value = '';
+  document.getElementById('kakaoTextarea').value = '';
+  state.targets = []; renderTargetList();
+  state.isAd = false; document.getElementById('adCheck').checked = false;
+  document.getElementById('adPrefix').style.display = 'none';
+  document.getElementById('summaryAd').textContent = '아니오';
+  document.getElementById('tempBanner').classList.remove('visible');
+  onMsgInput();
+}
+
+function restoreDraft() {
+  document.getElementById('msgTextarea').value = '안녕하세요, 의원입니다.\n다음 주 정기 검진 일정을 안내드립니다.\n내원 전 미리 예약해 주시면 대기 없이 진료 가능합니다.';
+  state.targets = [PATIENTS[0], PATIENTS[1], PATIENTS[2]];
+  renderTargetList();
+  document.getElementById('tempBanner').classList.remove('visible');
+  onMsgInput();
+  showSnackbar('임시 저장된 메시지를 불러왔습니다.', 'success');
+}
+
+// ── Close dropdowns on outside click ──────────────────
+document.addEventListener('click', e => {
+  if (!e.target.closest('.saved-conditions-wrap')) {
+    document.getElementById('savedCondList')?.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>

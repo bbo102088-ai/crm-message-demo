@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEND_00 — 메시지 발송 메인</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      color: #1a1a2e;
+      background: #f4f6fb;
+      padding: 32px 16px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .doc-header {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+    }
+
+    .doc-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .meta-table td {
+      padding: 4px 12px 4px 0;
+      color: rgba(255,255,255,.85);
+    }
+
+    .meta-table td:first-child {
+      font-weight: 600;
+      color: rgba(255,255,255,.6);
+      width: 80px;
+    }
+
+    .meta-table a {
+      color: #93c5fd;
+      text-decoration: none;
+    }
+
+    .meta-table a:hover { text-decoration: underline; }
+
+    /* ── Section Card ── */
+    .section-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      border-left: 4px solid #2563eb;
+    }
+
+    .section-card.yellow { border-left-color: #f59e0b; }
+    .section-card.green  { border-left-color: #10b981; }
+    .section-card.purple { border-left-color: #8b5cf6; }
+    .section-card.rose   { border-left-color: #f43f5e; }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-num {
+      background: #2563eb;
+      color: #fff;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .yellow .section-num { background: #f59e0b; }
+    .green  .section-num { background: #10b981; }
+    .purple .section-num { background: #8b5cf6; }
+    .rose   .section-num { background: #f43f5e; }
+
+    /* ── Sub-sections ── */
+    .sub-section {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .sub-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    ul {
+      padding-left: 18px;
+      line-height: 1.8;
+      color: #475569;
+    }
+
+    li { margin-bottom: 2px; }
+
+    /* ── Tags ── */
+    .tag {
+      display: inline-block;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+
+    .tag.warn {
+      background: #fff7ed;
+      color: #ea580c;
+      border-color: #fed7aa;
+    }
+
+    /* ── Tables ── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    .data-table th {
+      background: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      padding: 8px 12px;
+      text-align: left;
+      border: 1px solid #e2e8f0;
+    }
+
+    .data-table td {
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      vertical-align: top;
+    }
+
+    .data-table tr:nth-child(even) td { background: #f8fafc; }
+
+    /* ── Callout ── */
+    .callout {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #9a3412;
+      margin-top: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .callout-info {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1e40af;
+    }
+
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Index Section ── */
+    .index-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .index-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .index-item .id {
+      font-weight: 700;
+      color: #2563eb;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .index-item .label { color: #475569; }
+
+    /* ── Footer ── */
+    .doc-footer {
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 24px;
+    }
+
+    /* ── Channel Tabs (visual) ── */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      margin-top: 10px;
+    }
+
+    .tab {
+      padding: 6px 18px;
+      border-radius: 6px 6px 0 0;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: default;
+      border: 1px solid #e2e8f0;
+      border-bottom: none;
+    }
+
+    .tab.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .tab.inactive {
+      background: #f8fafc;
+      color: #94a3b8;
+    }
+
+    /* ── Status Badges ── */
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    .badge-snackbar { background: #d1fae5; color: #065f46; }
+    .badge-confirm  { background: #ede9fe; color: #5b21b6; }
+    .badge-warn     { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── Document Header ── -->
+  <div class="doc-header">
+    <h1>SEND_00 — 메시지 발송 메인</h1>
+    <table class="meta-table">
+      <tr><td>문서 ID</td><td>SEND_00</td></tr>
+      <tr><td>구분</td><td>의사랑 CRM</td></tr>
+      <tr><td>화면명</td><td>메시지 발송 메인</td></tr>
+      <tr><td>작성자</td><td>백지연</td></tr>
+      <tr><td>버전</td><td>v1.4.5 (2026.01.16)</td></tr>
+      <tr><td>Figma</td><td><a href="https://www.figma.com/design/qyVChXybmByPXZIhyJLNJv/?node-id=22287-19369" target="_blank">바로가기 ↗</a></td></tr>
+    </table>
+  </div>
+
+  <!-- ── 1. 발신번호 선택 ── -->
+  <div class="section-card">
+    <div class="section-title"><span class="section-num">1</span> 발신번호 선택 (Segment Control)</div>
+
+    <div class="sub-section">
+      <div class="sub-title">1-1. Default</div>
+      <p style="color:#475569;font-size:13px;">기본 발신번호가 선택된 상태로 화면 진입.</p>
+    </div>
+
+    <div class="sub-section">
+      <div class="sub-title">1-2. 목록 선택</div>
+      <ul>
+        <li>사무국에서 미리 등록된 번호 목록에서 선택</li>
+        <li>번호는 <strong>환경설정 페이지</strong>에서 관리</li>
+        <li>등록된 번호가 있어야 발신번호 Confirm 됨</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 2. 채널 선택 ── -->
+  <div class="section-card yellow">
+    <div class="section-title"><span class="section-num">2</span> 채널 선택 (탭)</div>
+
+    <div class="tab-bar">
+      <div class="tab active">문자</div>
+      <div class="tab inactive">카카오톡</div>
+    </div>
+
+    <div class="sub-section" style="border-top:none;margin-top:12px;">
+      <ul>
+        <li><span class="tag">문자</span> / <span class="tag">카카오톡</span> 탭 전환</li>
+        <li>문자 탭 → 카카오로 이동 시: 작성된 내용 <strong>초기화</strong></li>
+        <li>카카오 탭 → 문자로 이동 시: 마찬가지로 작성 내용 <strong>초기화</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 3. 발송 대상 선택 ── -->
+  <div class="section-card green">
+    <div class="section-title"><span class="section-num">3</span> 발송 대상 선택</div>
+
+    <div class="sub-section">
+      <div class="sub-title">2-1. 조건 선택</div>
+      <ul>
+        <li>드롭다운 선택 시 조건 선택 기능 활성화</li>
+        <li>활성화되면 발송 버튼 영역에 <span class="tag">[발송하기]</span> 버튼 노출</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-icon">⚠️</span>
+        수기입력 방식인지 확인 필요 (기획서 재확인 요청)
+      </div>
+    </div>
+
+    <div class="sub-section">
+      <div class="sub-title">2-2. 직접 입력 (수기 선택)</div>
+      <p style="color:#475569;font-size:13px;">환자를 직접 검색하여 등록하는 기능</p>
+    </div>
+
+    <div class="sub-section">
+      <div class="sub-title">2-3. 소모로 선택 (Dropdown Control)</div>
+    </div>
+
+    <div class="sub-section">
+      <div class="sub-title">2-5. 저장한 조건 선택</div>
+      <p style="color:#475569;font-size:13px;margin-bottom:8px;">이전에 저장된 조건 목록에서 불러오는 기능.</p>
+      <ul>
+        <li><strong>Default 상태</strong>: 없는 상태 / 선택된 상태 / 리스트 펼쳐진 상태</li>
+        <li><strong>삭제</strong>: 데이터 있는 상태에서 삭제 가능</li>
+      </ul>
+
+      <div class="sub-section" style="margin-left:12px;">
+        <div class="sub-title">2-5a. [저장한 조건 선택] 클릭 시 리스트 노출</div>
+        <ul>
+          <li>Default: 리스트 없는 상태에서의 UX 표시</li>
+          <li>리스트 선택 시 Filter 상태 표시 <span class="tag warn">filter 상태값 확인 필요</span></li>
+          <li>리스트 선택 취소 시 기존 상태로 복귀</li>
+        </ul>
+      </div>
+
+      <div class="sub-section" style="margin-left:12px;">
+        <div class="sub-title">2-5b. 저장한 조건 리스트 더블 클릭 시 Confirm</div>
+        <p style="color:#475569;font-size:13px;">저장한 조건을 더블 클릭 시 조건 상세 Form 노출</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4. 메시지 작성 ── -->
+  <div class="section-card purple">
+    <div class="section-title"><span class="section-num">4</span> 메시지 작성</div>
+
+    <ul>
+      <li><strong>광고성</strong> 체크 옵션</li>
+      <li><strong>이미지 추가</strong>: JPG, PNG 파일 (최대 3개, 각 5MB 이하)</li>
+      <li><strong>AI 작성</strong> 기능</li>
+      <li><strong>SMS / LMS 자동 전환</strong> (byte 초과 시)</li>
+    </ul>
+
+    <div class="sub-section">
+      <div class="sub-title">광고성 툴팁 — 이미지 첨부 수에 따른 레이아웃</div>
+      <table class="data-table">
+        <thead>
+          <tr><th>첨부 수</th><th>표시 방식</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1개</td><td>단일 이미지</td></tr>
+          <tr><td>2개</td><td>2열 이미지</td></tr>
+          <tr><td>3개</td><td>3열 이미지</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── 5. 발송 시간 선택 ── -->
+  <div class="section-card">
+    <div class="section-title"><span class="section-num">5</span> 발송 시간 선택</div>
+
+    <p style="color:#475569;font-size:13px;margin-bottom:12px;">
+      <span class="tag">[즉시 발송]</span> 또는 <span class="tag">[예약 발송]</span> 버튼으로 선택.
+    </p>
+
+    <div class="sub-section">
+      <div class="sub-title">3-1. 즉시 발송 / 예약 발송 탭</div>
+      <div class="tab-bar">
+        <div class="tab active">즉시 발송</div>
+        <div class="tab inactive">예약 발송</div>
+      </div>
+    </div>
+
+    <div class="sub-section">
+      <div class="sub-title">예약 발송 선택 시</div>
+
+      <div class="sub-section" style="margin-left:12px;">
+        <div class="sub-title">3-2. 예약 날짜 선택 (Selected A)</div>
+        <ul>
+          <li>예약 발송 버튼 클릭 후 달력 표시</li>
+          <li><strong>최소 3일 이후</strong> 날짜만 선택 가능</li>
+        </ul>
+      </div>
+
+      <div class="sub-section" style="margin-left:12px;">
+        <div class="sub-title">3-2b. Combo-Box 외부 클릭 시</div>
+        <p style="color:#475569;font-size:13px;">[확인] 버튼 없이 달력을 닫을 때의 동작</p>
+      </div>
+
+      <div class="sub-section" style="margin-left:12px;">
+        <div class="sub-title">3-3. 예약 시간 선택</div>
+        <ul>
+          <li>달력에서 날짜 선택 후 팝업 Form으로 시간 선택</li>
+          <li>달력에서 예약 날짜와 발송 아이콘을 선택하면 발송 시간도 같이 선택됨</li>
+          <li>오전 / 오후 선택 → 시:분 입력 (예: 오전 10:00)</li>
+        </ul>
+      </div>
+
+      <div class="sub-section" style="margin-left:12px;">
+        <div class="sub-title">3-4. 예약 시간 확정</div>
+        <p style="color:#475569;font-size:13px;">예약 시간 설정 완료 상태. <span class="tag">[취소]</span> / <span class="tag">[확인]</span> 버튼 표시</p>
+      </div>
+
+      <div class="sub-section" style="margin-left:12px;">
+        <div class="sub-title">3-5. 예약 날짜 + 시간 모두 선택 완료</div>
+        <p style="color:#475569;font-size:13px;">날짜 및 시간이 함께 표시됨 (예: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;">2025-09-15 (목) 오전 10:00</code>)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 6. 발송하기 ── -->
+  <div class="section-card rose">
+    <div class="section-title"><span class="section-num">6</span> 발송하기</div>
+
+    <div class="sub-section">
+      <div class="sub-title">4-1. 발송하기 버튼 클릭</div>
+      <p style="color:#475569;font-size:13px;margin-bottom:10px;">내용 입력 후 발송 버튼 클릭 시 아래 케이스별로 동작.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>ID</th><th>케이스</th><th>동작 방식</th><th>문구</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>4-2a</td>
+            <td>대용량 발송</td>
+            <td><span class="badge badge-confirm">Confirm 모달</span></td>
+            <td>환경설정 연동</td>
+          </tr>
+          <tr>
+            <td>4-2b</td>
+            <td>보낼 대상 미선택</td>
+            <td><span class="badge badge-snackbar">Snackbar</span></td>
+            <td>"보낼 대상을 선택해주세요."</td>
+          </tr>
+          <tr>
+            <td>4-2c</td>
+            <td>메시지 내용 미입력</td>
+            <td><span class="badge badge-snackbar">Snackbar</span></td>
+            <td>"메시지를 입력해주세요."</td>
+          </tr>
+          <tr>
+            <td>4-2d</td>
+            <td>네트워크 오류</td>
+            <td><span class="badge badge-snackbar">Snackbar</span></td>
+            <td>네트워크 오류 안내</td>
+          </tr>
+          <tr>
+            <td>4-2e</td>
+            <td>예약 발송 성공</td>
+            <td><span class="badge badge-snackbar">Snackbar</span></td>
+            <td>예약 발송 성공 안내</td>
+          </tr>
+          <tr>
+            <td>4-2f</td>
+            <td>즉시 발송 성공</td>
+            <td><span class="badge badge-snackbar">Snackbar</span></td>
+            <td>즉시 발송 성공 안내</td>
+          </tr>
+          <tr>
+            <td>4-2g</td>
+            <td>광고 야간 즉시 발송</td>
+            <td><span class="badge badge-snackbar">Snackbar</span></td>
+            <td>"광고는 야간 시간대를 제외한 다음날 오전 8시부터 보낼 수 있습니다."</td>
+          </tr>
+          <tr>
+            <td>4-2h</td>
+            <td>LMS/MMS 2개 이상 즉시/예약 발송</td>
+            <td><span class="badge badge-confirm">Confirm 모달</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>4-2h-1</td>
+            <td>4-2h 확인 후</td>
+            <td><span class="badge badge-snackbar">Snackbar</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>4-2h-2</td>
+            <td>4-2h 관련</td>
+            <td><span class="badge badge-snackbar">Snackbar</span></td>
+            <td><span class="tag warn">⚠️ LMS = MMS 여부 확인 필요</span></td>
+          </tr>
+          <tr>
+            <td>4-2j</td>
+            <td>예약어 포함 SMS→LMS 전환</td>
+            <td><span class="badge badge-confirm">Confirm 모달</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>4-2j 확인 후</td>
+            <td>확인 클릭</td>
+            <td><span class="badge badge-snackbar">Snackbar</span></td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── 7. 발신번호 ── -->
+  <div class="section-card">
+    <div class="section-title"><span class="section-num">7</span> 발신번호</div>
+
+    <div class="sub-section">
+      <div class="sub-title">5-1a. 등록된 발신번호가 없을 시 Confirm (프로그램 실행 시)</div>
+      <ul>
+        <li><span class="tag">[CRM 클릭]</span> → 환경설정으로 이동</li>
+        <li><span class="tag">[넘어가기]</span> → 발신번호 없이 프로그램 실행 계속</li>
+      </ul>
+    </div>
+
+    <div class="sub-section">
+      <div class="sub-title">5-2. 발신번호 선택</div>
+      <p style="color:#475569;font-size:13px;">등록된 발신번호 목록에서 선택</p>
+    </div>
+
+    <div class="sub-section">
+      <div class="sub-title">5-8. 발신번호 목록 (기본 설정 있을 시)</div>
+    </div>
+
+    <div class="sub-section">
+      <div class="sub-title">5-9. 예약 시간 기준 달력</div>
+    </div>
+  </div>
+
+  <!-- ── 8. 임시 저장 ── -->
+  <div class="section-card yellow">
+    <div class="section-title"><span class="section-num">8</span> 임시 저장</div>
+
+    <p style="color:#475569;font-size:13px;margin-bottom:8px;">
+      <strong>저장 범위</strong>: 채널, 보낼 대상, 보낼 시간 선택, 메시지 입력, 광고 여부, 이미지 추가 등 모든 데이터 포함
+    </p>
+
+    <div class="sub-section">
+      <div class="sub-title">6-1. 자동 임시 저장</div>
+      <ul>
+        <li><strong>조건</strong>: 메시지 내용 1자 이상 <strong>AND</strong> 불러온 대상 1건 이상 존재 상태에서 페이지 이탈 시 자동 저장</li>
+        <li>저장 시 토스트 알림 노출</li>
+        <li><strong>보관 기한</strong>: 영구 보관하지 않으며, 저장 시점 기준 <strong>7일</strong> 동안 유지됨</li>
+      </ul>
+    </div>
+
+    <div class="sub-section">
+      <div class="sub-title">6-2. 임시저장 불러오기 Confirm</div>
+      <p style="color:#475569;font-size:13px;margin-bottom:10px;">사용자가 메시지 작성 페이지 재진입 시, 임시 저장 데이터가 존재하면 Confirm 모달 노출.</p>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">💬</span>
+        <span><strong>Confirm 문구</strong>: "임시 저장된 메시지가 있습니다. 불러오시겠습니까?"</span>
+      </div>
+
+      <table class="data-table" style="margin-top:12px;">
+        <thead>
+          <tr><th>버튼</th><th>동작</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="tag">[새로 작성]</span></td><td>모든 값 초기화 후 새 메시지 작성</td></tr>
+          <tr><td><span class="tag">[불러오기]</span></td><td>임시 저장된 내용 불러옴</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── 참고 — 발송 가능 정책 ── -->
+  <div class="section-card" style="border-left-color:#64748b;">
+    <div class="section-title"><span class="section-num" style="background:#64748b;">참고</span> 메시지 발송 가능 정책</div>
+    <p style="color:#475569;font-size:13px;">
+      수신 거부 / 개인정보 미동의 대상자에게는 발송이 제한될 수 있으며, 관련 정책은 환경설정에서 확인.
+    </p>
+  </div>
+
+  <!-- ── 화면 ID 인덱스 ── -->
+  <div class="section-card" style="border-left-color:#0ea5e9;">
+    <div class="section-title"><span class="section-num" style="background:#0ea5e9;">IDX</span> 화면 ID 인덱스</div>
+
+    <div class="index-grid">
+      <div class="index-item"><span class="id">SEND_00</span><span class="label">메시지 발송 메인</span></div>
+      <div class="index-item"><span class="id">1-1</span><span class="label">발신번호 Default</span></div>
+      <div class="index-item"><span class="id">1-2</span><span class="label">발신번호 목록 선택</span></div>
+      <div class="index-item"><span class="id">2-1</span><span class="label">발송 대상 조건 선택</span></div>
+      <div class="index-item"><span class="id">2-2</span><span class="label">직접 입력 (수기 선택)</span></div>
+      <div class="index-item"><span class="id">2-3</span><span class="label">소모로 선택 (Dropdown)</span></div>
+      <div class="index-item"><span class="id">2-5</span><span class="label">저장한 조건 선택</span></div>
+      <div class="index-item"><span class="id">2-5a</span><span class="label">저장한 조건 리스트 노출</span></div>
+      <div class="index-item"><span class="id">2-5b</span><span class="label">저장한 조건 더블클릭 Confirm</span></div>
+      <div class="index-item"><span class="id">3-1</span><span class="label">즉시/예약 발송 탭</span></div>
+      <div class="index-item"><span class="id">3-2</span><span class="label">예약 날짜 선택 (달력)</span></div>
+      <div class="index-item"><span class="id">3-2b</span><span class="label">Combo-Box 외부 클릭</span></div>
+      <div class="index-item"><span class="id">3-3</span><span class="label">예약 시간 선택 팝업</span></div>
+      <div class="index-item"><span class="id">3-4</span><span class="label">예약 시간 확정</span></div>
+      <div class="index-item"><span class="id">3-5</span><span class="label">날짜 + 시간 선택 완료</span></div>
+      <div class="index-item"><span class="id">4-1</span><span class="label">발송하기 버튼 클릭</span></div>
+      <div class="index-item"><span class="id">4-2a</span><span class="label">대용량 발송 Confirm 모달</span></div>
+      <div class="index-item"><span class="id">4-2b</span><span class="label">보낼 대상 미선택 Snackbar</span></div>
+      <div class="index-item"><span class="id">4-2c</span><span class="label">메시지 내용 미입력 Snackbar</span></div>
+      <div class="index-item"><span class="id">4-2d</span><span class="label">네트워크 오류 Snackbar</span></div>
+      <div class="index-item"><span class="id">4-2e</span><span class="label">예약 발송 성공 Snackbar</span></div>
+      <div class="index-item"><span class="id">4-2f</span><span class="label">즉시 발송 성공 Snackbar</span></div>
+      <div class="index-item"><span class="id">4-2g</span><span class="label">광고 야간 즉시 발송 Snackbar</span></div>
+      <div class="index-item"><span class="id">4-2h</span><span class="label">LMS/MMS 2개 이상 Confirm 모달</span></div>
+      <div class="index-item"><span class="id">4-2j</span><span class="label">예약어 포함 SMS→LMS Confirm</span></div>
+      <div class="index-item"><span class="id">5-1a</span><span class="label">발신번호 없을 시 Confirm</span></div>
+      <div class="index-item"><span class="id">5-2</span><span class="label">발신번호 선택</span></div>
+      <div class="index-item"><span class="id">5-8</span><span class="label">발신번호 목록</span></div>
+      <div class="index-item"><span class="id">5-9</span><span class="label">예약 시간 기준 달력</span></div>
+      <div class="index-item"><span class="id">6-1</span><span class="label">페이지 이탈 시 자동 임시 저장</span></div>
+      <div class="index-item"><span class="id">6-2</span><span class="label">임시저장 불러오기 Confirm</span></div>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    이 문서는 Figma 파일 <code>SEND_00</code> (node-id: 22287-19369)을 기반으로 생성되었습니다.
+  </div>
+
+</div>
+</body>
+</html>

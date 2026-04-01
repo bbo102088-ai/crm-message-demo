@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>메시지 발송 — 의사랑 CRM</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sidebar-w: 56px;
+    --col-gap: 12px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    --c-primary: #3B6DDD;
+    --c-primary-hover: #2F5DC4;
+    --c-primary-light: #EEF3FF;
+    --c-danger: #F04438;
+    --c-warning: #F79009;
+    --c-success: #12B76A;
+    --c-info: #0BA5EC;
+
+    --c-gray-50: #F9FAFB;
+    --c-gray-100: #F2F4F7;
+    --c-gray-200: #EAECF0;
+    --c-gray-300: #D0D5DD;
+    --c-gray-400: #98A2B3;
+    --c-gray-500: #667085;
+    --c-gray-600: #475467;
+    --c-gray-700: #344054;
+    --c-gray-800: #1D2939;
+    --c-gray-900: #101828;
+
+    --c-sidebar-bg: #1C2B4B;
+    --c-sidebar-active: #2D3F63;
+
+    --font: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--c-gray-900);
+    background: var(--c-gray-100);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--c-sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 4px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .sidebar-logo {
+    width: 36px; height: 36px;
+    background: var(--c-primary);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .sidebar-item {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px;
+    cursor: pointer; color: #9DB0D4; font-size: 9px;
+    transition: background .15s, color .15s;
+  }
+  .sidebar-item:hover { background: var(--c-sidebar-active); color: #fff; }
+  .sidebar-item.active { background: var(--c-sidebar-active); color: #fff; }
+  .sidebar-item svg { width: 20px; height: 20px; }
+  .sidebar-divider { width: 32px; height: 1px; background: #2D3F63; margin: 4px 0; }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    height: 48px;
+    background: #fff;
+    border-bottom: 1px solid var(--c-gray-200);
+    display: flex; align-items: center;
+    padding: 0 20px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-size: 16px; font-weight: 600; color: var(--c-gray-900);
+    flex: 1;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .topbar-title svg { color: var(--c-gray-400); }
+  .topbar-draft {
+    font-size: 12px; color: var(--c-primary); cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border: 1px solid var(--c-primary); border-radius: 6px;
+  }
+  .topbar-draft:hover { background: var(--c-primary-light); }
+
+  /* ── BODY ── */
+  .body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    padding: 16px;
+    gap: var(--col-gap);
+  }
+
+  /* ── COLUMNS ── */
+  .col-left { width: 380px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  .col-right { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+  /* scrollbar */
+  .col-left::-webkit-scrollbar, .col-right::-webkit-scrollbar { width: 4px; }
+  .col-left::-webkit-scrollbar-thumb, .col-right::-webkit-scrollbar-thumb { background: var(--c-gray-300); border-radius: 4px; }
+
+  /* ── CARD ── */
+  .card {
+    background: #fff;
+    border: 1px solid var(--c-gray-200);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600; color: var(--c-gray-700);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px;
+    background: var(--c-gray-700); color: #fff;
+    border-radius: 4px; font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ── [7] QUICK LOAD BANNER ── */
+  .quick-banner {
+    background: linear-gradient(135deg, #EEF3FF 0%, #E0E9FF 100%);
+    border: 1px solid #C7D9FF;
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+    transition: box-shadow .15s;
+  }
+  .quick-banner:hover { box-shadow: 0 2px 8px rgba(59,109,221,.15); }
+  .quick-banner-icon {
+    width: 36px; height: 36px;
+    background: var(--c-primary); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .quick-banner-text { flex: 1; }
+  .quick-banner-text strong { display: block; font-size: 13px; font-weight: 600; color: var(--c-primary); }
+  .quick-banner-text span { font-size: 11px; color: var(--c-gray-500); }
+  .quick-banner-arrow { color: var(--c-primary); }
+
+  /* ── [1] SEGMENT CONTROL ── */
+  .segment { display: flex; background: var(--c-gray-100); border-radius: 8px; padding: 3px; gap: 2px; }
+  .seg-btn {
+    flex: 1; padding: 7px 0; border: none; background: transparent;
+    border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--c-gray-500);
+    cursor: pointer; transition: background .15s, color .15s;
+  }
+  .seg-btn.active { background: #fff; color: var(--c-primary); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+  /* ── [2] TARGET TABS ── */
+  .tab-bar { display: flex; border-bottom: 1px solid var(--c-gray-200); margin: 0 -16px; padding: 0 16px; gap: 0; }
+  .tab-item {
+    padding: 8px 14px; font-size: 13px; color: var(--c-gray-500);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    cursor: pointer; white-space: nowrap; transition: color .15s;
+  }
+  .tab-item:hover { color: var(--c-gray-700); }
+  .tab-item.active { color: var(--c-primary); border-color: var(--c-primary); font-weight: 600; }
+
+  /* ── [2-5] CHIPS ── */
+  .chip-area { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: 20px;
+    font-size: 12px; cursor: pointer;
+    border: 1px solid var(--c-gray-300); background: #fff; color: var(--c-gray-700);
+    transition: background .15s, border-color .15s;
+  }
+  .chip:hover { border-color: var(--c-primary); color: var(--c-primary); }
+  .chip.chip-fav { border-color: #F9A825; background: #FFFDE7; color: #7A5B00; }
+  .chip.chip-fav svg { color: #F9A825; }
+  .chip.chip-strong {
+    border-color: var(--c-primary); background: var(--c-primary-light);
+    color: var(--c-primary); font-weight: 600;
+  }
+  .chip-dropdown {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: 8px;
+    font-size: 12px; cursor: pointer;
+    border: 1px solid var(--c-gray-300); background: #fff; color: var(--c-gray-700);
+    position: relative;
+  }
+  .chip-dropdown:hover { border-color: var(--c-primary); }
+
+  /* ── [2-6] PATIENT PREVIEW ── */
+  .patient-preview {
+    margin-top: 12px; border: 1px solid var(--c-gray-200);
+    border-radius: var(--radius-md); overflow: hidden; min-height: 120px;
+  }
+  .patient-preview-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 120px; color: var(--c-gray-400); gap: 6px;
+    font-size: 12px; text-align: center; padding: 20px;
+  }
+  .patient-preview-header {
+    background: var(--c-gray-50); padding: 8px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--c-gray-200);
+  }
+  .patient-preview-header strong { font-size: 12px; color: var(--c-gray-700); }
+  .patient-count-badge {
+    background: var(--c-primary); color: #fff;
+    font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px;
+  }
+  .patient-list { max-height: 150px; overflow-y: auto; }
+  .patient-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-bottom: 1px solid var(--c-gray-100);
+    font-size: 12px;
+  }
+  .patient-card:last-child { border-bottom: none; }
+  .patient-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--c-primary-light); color: var(--c-primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; flex-shrink: 0;
+  }
+  .patient-info { flex: 1; }
+  .patient-name { font-weight: 600; color: var(--c-gray-800); }
+  .patient-meta { color: var(--c-gray-500); font-size: 11px; }
+  .patient-phone { color: var(--c-gray-500); font-size: 11px; }
+  .detail-link { text-align: right; padding: 6px 12px; }
+  .detail-link a { font-size: 11px; color: var(--c-primary); text-decoration: none; cursor: pointer; }
+
+  /* ── [3] TIME SELECTOR ── */
+  .time-selector { display: flex; gap: 8px; }
+  .time-btn {
+    flex: 1; padding: 9px 0; border-radius: 8px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--c-gray-300); background: #fff; color: var(--c-gray-600);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all .15s;
+  }
+  .time-btn.active {
+    border-color: var(--c-primary); background: var(--c-primary); color: #fff;
+  }
+
+  .reservation-form { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .form-row { display: flex; gap: 8px; align-items: center; }
+  .form-label { font-size: 12px; color: var(--c-gray-600); width: 60px; flex-shrink: 0; }
+  .form-input {
+    flex: 1; padding: 7px 10px; border: 1px solid var(--c-gray-300); border-radius: 6px;
+    font-size: 13px; color: var(--c-gray-900); font-family: var(--font);
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(59,109,221,.1); }
+  .time-period-select {
+    padding: 7px 10px; border: 1px solid var(--c-gray-300); border-radius: 6px;
+    font-size: 13px; font-family: var(--font); outline: none; cursor: pointer;
+    background: #fff;
+  }
+  .time-period-select:focus { border-color: var(--c-primary); }
+
+  .night-ad-notice {
+    background: #FFF8E1; border: 1px solid #FFE082; border-radius: 6px;
+    padding: 8px 12px; font-size: 11px; color: #7A5B00;
+    display: flex; gap: 6px; align-items: flex-start;
+    margin-top: 8px;
+  }
+
+  /* ── RIGHT COLUMN ── */
+  .msg-area { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+
+  /* ── [5] MESSAGE INPUT ── */
+  .msg-input-wrapper {
+    border: 1px solid var(--c-gray-200); border-radius: 10px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .msg-phone-preview {
+    background: var(--c-gray-50); padding: 12px 14px;
+    border-bottom: 1px solid var(--c-gray-200);
+    min-height: 140px; position: relative;
+  }
+  .phone-bubble {
+    background: var(--c-gray-200); border-radius: 12px 12px 12px 2px;
+    padding: 10px 12px; max-width: 80%; font-size: 13px;
+    line-height: 1.5; color: var(--c-gray-800);
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .phone-ad-prefix {
+    font-weight: 600; color: var(--c-gray-500); font-size: 11px; margin-bottom: 4px;
+  }
+  .msg-textarea {
+    width: 100%; padding: 12px 14px; border: none; outline: none; resize: none;
+    font-size: 13px; font-family: var(--font); color: var(--c-gray-900);
+    line-height: 1.6; min-height: 80px;
+  }
+  .msg-toolbar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border-top: 1px solid var(--c-gray-100);
+    flex-wrap: wrap;
+  }
+  .tool-btn {
+    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--c-gray-200);
+    font-size: 11px; color: var(--c-gray-600); cursor: pointer; background: #fff;
+    display: flex; align-items: center; gap: 4px;
+    transition: background .15s, border-color .15s;
+  }
+  .tool-btn:hover { border-color: var(--c-primary); color: var(--c-primary); background: var(--c-primary-light); }
+
+  /* ── [5-4] BYTE BADGE ── */
+  .byte-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 12px 0;
+  }
+  .byte-badge {
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600;
+    background: var(--c-gray-100); color: var(--c-gray-600);
+  }
+  .byte-badge.sms { background: #E8F5E9; color: #2E7D32; }
+  .byte-badge.lms { background: #FFF3E0; color: #E65100; }
+  .byte-badge.mms { background: #FCE4EC; color: #880E4F; }
+  .byte-count { font-size: 12px; color: var(--c-gray-400); }
+
+  /* ── [5-8] AD CHECKBOX ── */
+  .ad-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border: 1px solid var(--c-gray-200);
+    border-radius: var(--radius-md); background: #fff;
+  }
+  .ad-row label { font-size: 13px; color: var(--c-gray-700); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .ad-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--c-primary); cursor: pointer; }
+  .tooltip-icon {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--c-gray-300); color: var(--c-gray-600);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; cursor: help;
+    position: relative;
+  }
+  .tooltip-icon:hover .tooltip-text { display: block; }
+  .tooltip-text {
+    display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--c-gray-800); color: #fff; font-size: 11px;
+    padding: 6px 10px; border-radius: 6px; white-space: nowrap; z-index: 100;
+    pointer-events: none;
+  }
+
+  /* ── [5-9] IMAGE UPLOAD ── */
+  .img-upload-row {
+    display: flex; gap: 8px; align-items: center;
+    padding: 10px 14px; border: 1px solid var(--c-gray-200);
+    border-radius: var(--radius-md); background: #fff;
+  }
+  .img-upload-label { font-size: 12px; color: var(--c-gray-600); }
+  .img-tile {
+    width: 52px; height: 52px; border-radius: 6px; border: 1px dashed var(--c-gray-300);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--c-gray-400); font-size: 20px;
+    transition: border-color .15s, background .15s;
+    background: var(--c-gray-50);
+  }
+  .img-tile:hover { border-color: var(--c-primary); color: var(--c-primary); background: var(--c-primary-light); }
+  .img-tile img { width: 100%; height: 100%; object-fit: cover; border-radius: 5px; }
+
+  /* ── [4] SEND ACTIONS ── */
+  .send-actions { display: flex; flex-direction: column; gap: 8px; }
+  .btn-send {
+    width: 100%; padding: 14px; border-radius: 10px;
+    background: var(--c-primary); color: #fff; border: none;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: background .15s, transform .1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-send:hover { background: var(--c-primary-hover); }
+  .btn-send:active { transform: scale(.98); }
+  .btn-save-condition {
+    width: 100%; padding: 10px; border-radius: 10px;
+    background: #fff; color: var(--c-primary);
+    border: 1px solid var(--c-primary); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: background .15s;
+    display: none;
+  }
+  .btn-save-condition.visible { display: block; }
+  .btn-save-condition:hover { background: var(--c-primary-light); }
+
+  /* ── DROPDOWN MENU ── */
+  .dropdown-menu {
+    position: absolute; top: 100%; left: 0; z-index: 200;
+    background: #fff; border: 1px solid var(--c-gray-200);
+    border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    min-width: 180px; padding: 4px 0;
+    display: none;
+  }
+  .dropdown-menu.open { display: block; }
+  .dropdown-item {
+    padding: 8px 14px; font-size: 13px; color: var(--c-gray-700);
+    cursor: pointer;
+  }
+  .dropdown-item:hover { background: var(--c-gray-50); }
+  .dropdown-empty { padding: 12px 14px; font-size: 12px; color: var(--c-gray-400); }
+
+  /* ── PALETTES ── */
+  .palette {
+    position: absolute; z-index: 300;
+    background: #fff; border: 1px solid var(--c-gray-200);
+    border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.12);
+    padding: 12px; width: 260px;
+    display: none;
+  }
+  .palette.open { display: block; }
+  .palette-title { font-size: 11px; font-weight: 600; color: var(--c-gray-500); margin-bottom: 8px; }
+  .special-chars { display: flex; flex-wrap: wrap; gap: 4px; }
+  .spec-char {
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--c-gray-200); border-radius: 4px; cursor: pointer;
+    font-size: 14px; color: var(--c-gray-700);
+    transition: background .1s;
+  }
+  .spec-char:hover { background: var(--c-primary-light); border-color: var(--c-primary); }
+  .reserved-list { display: flex; flex-direction: column; gap: 4px; }
+  .reserved-item {
+    padding: 6px 10px; border-radius: 6px; border: 1px solid var(--c-gray-200);
+    font-size: 12px; cursor: pointer; display: flex; justify-content: space-between;
+    color: var(--c-gray-700); background: #fff;
+    transition: background .1s;
+  }
+  .reserved-item:hover { background: var(--c-primary-light); border-color: var(--c-primary); }
+  .reserved-item span { color: var(--c-gray-400); font-size: 11px; }
+
+  /* ── MODAL ── */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: #fff; border-radius: 14px; padding: 24px;
+    width: 400px; max-width: 90vw;
+    box-shadow: 0 8px 40px rgba(0,0,0,.18);
+    transform: translateY(8px); transition: transform .2s;
+  }
+  .modal-backdrop.open .modal { transform: translateY(0); }
+  .modal-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .modal-title { font-size: 15px; font-weight: 700; color: var(--c-gray-900); }
+  .modal-close {
+    background: none; border: none; cursor: pointer; color: var(--c-gray-400);
+    font-size: 18px; line-height: 1; padding: 2px;
+  }
+  .modal-close:hover { color: var(--c-gray-700); }
+  .modal-body { font-size: 13px; color: var(--c-gray-600); line-height: 1.6; margin-bottom: 20px; }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--c-gray-300);
+    border-radius: 8px; font-size: 13px; font-family: var(--font); outline: none;
+    margin-bottom: 16px;
+  }
+  .modal-input:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(59,109,221,.1); }
+  .btn { padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+  .btn-outline { background: #fff; border: 1px solid var(--c-gray-300); color: var(--c-gray-700); }
+  .btn-outline:hover { border-color: var(--c-gray-400); }
+  .btn-primary { background: var(--c-primary); color: #fff; }
+  .btn-primary:hover { background: var(--c-primary-hover); }
+  .btn-danger { background: var(--c-danger); color: #fff; }
+
+  /* ── MASS CONFIRM CHECKBOX ── */
+  .mass-checkbox-row { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; color: var(--c-gray-600); margin-top: 8px; }
+  .mass-checkbox-row input { margin-top: 1px; accent-color: var(--c-primary); }
+
+  /* ── TOAST ── */
+  .toast-container {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; gap: 8px; z-index: 1000;
+    align-items: center;
+  }
+  .toast {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; color: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,.2);
+    animation: slideUp .25s ease;
+    min-width: 240px;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .toast.warning { background: #B54708; }
+  .toast.success { background: #027A48; }
+  .toast.info { background: #026AA2; }
+  .toast svg { flex-shrink: 0; }
+
+  /* ── DATE PICKER SIMPLE ── */
+  .date-picker-wrapper { position: relative; flex: 1; }
+  .date-picker-input { cursor: pointer; }
+
+  /* ── TEMPLATE MODAL ── */
+  .template-list { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }
+  .template-item {
+    padding: 10px 12px; border: 1px solid var(--c-gray-200); border-radius: 8px;
+    cursor: pointer; transition: background .1s;
+  }
+  .template-item:hover { background: var(--c-primary-light); border-color: var(--c-primary); }
+  .template-name { font-size: 13px; font-weight: 600; color: var(--c-gray-800); }
+  .template-preview { font-size: 11px; color: var(--c-gray-500); margin-top: 2px; }
+
+  /* ── CONDITION SEARCH MODAL ── */
+  .condition-form { display: flex; flex-direction: column; gap: 10px; }
+  .condition-row { display: flex; flex-direction: column; gap: 4px; }
+  .condition-label { font-size: 11px; font-weight: 600; color: var(--c-gray-600); }
+  .condition-select {
+    padding: 8px 10px; border: 1px solid var(--c-gray-300); border-radius: 6px;
+    font-size: 13px; font-family: var(--font); outline: none; background: #fff;
+  }
+  .condition-select:focus { border-color: var(--c-primary); }
+
+  /* ── TABS PANEL VISIBILITY ── */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── INDIVIDUAL INPUT ── */
+  .individual-search {
+    display: flex; gap: 6px; margin-top: 12px;
+  }
+  .individual-search .form-input { flex: 1; }
+  .btn-search {
+    padding: 7px 14px; border-radius: 6px; background: var(--c-primary); color: #fff;
+    border: none; font-size: 12px; cursor: pointer;
+  }
+  .individual-note { font-size: 11px; color: var(--c-gray-400); margin-top: 6px; text-align: center; }
+
+  /* ── EXCEL UPLOAD ── */
+  .excel-drop {
+    border: 2px dashed var(--c-gray-300); border-radius: 10px;
+    padding: 28px; text-align: center; color: var(--c-gray-400);
+    cursor: pointer; margin-top: 12px; transition: border-color .15s;
+  }
+  .excel-drop:hover { border-color: var(--c-primary); color: var(--c-primary); }
+  .excel-drop svg { margin-bottom: 8px; }
+  .excel-drop p { font-size: 12px; }
+  .excel-drop strong { color: var(--c-primary); font-size: 13px; }
+
+  /* hide/show helpers */
+  .hidden { display: none !important; }
+  .visible-flex { display: flex !important; }
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<nav class="sidebar">
+  <div class="sidebar-logo">의</div>
+  <div class="sidebar-item active" title="메시지 발송">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span>발송</span>
+  </div>
+  <div class="sidebar-item" title="발송 내역">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+    </svg>
+    <span>내역</span>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-item" title="환자 관리">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <span>환자</span>
+  </div>
+  <div class="sidebar-item" title="주소록">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    </svg>
+    <span>주소록</span>
+  </div>
+  <div class="sidebar-item" title="통계">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    <span>통계</span>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-item" title="환경설정">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    <span>설정</span>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+      메시지 발송
+    </div>
+    <div class="topbar-draft" id="btnDraftLoad" onclick="showDraftConfirm()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      임시 저장 불러오기
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- ═══════════════════════════════════
+         LEFT COLUMN
+    ═══════════════════════════════════ -->
+    <div class="col-left">
+
+      <!-- [7] Quick Load Banner -->
+      <div class="quick-banner" onclick="showToast('info','빠른 메시지 설정을 불러왔습니다.')">
+        <div class="quick-banner-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <div class="quick-banner-text">
+          <strong>빠르게 메시지 설정 불러오기</strong>
+          <span>클릭 한 번으로 메시지 준비 완료!</span>
+        </div>
+        <svg class="quick-banner-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </div>
+
+      <!-- [1] 채널 선택 -->
+      <div class="card">
+        <div class="card-title">
+          <span class="section-badge">1</span>
+          채널 선택
+        </div>
+        <div class="segment">
+          <button class="seg-btn active" id="segSMS" onclick="switchChannel('sms')">
+            📱 문자
+          </button>
+          <button class="seg-btn" id="segKakao" onclick="switchChannel('kakao')">
+            💬 카카오톡
+          </button>
+        </div>
+      </div>
+
+      <!-- [2] 보낼 대상 선택 -->
+      <div class="card" style="padding-bottom: 14px;">
+        <div class="card-title">
+          <span class="section-badge">2</span>
+          보낼 대상 선택
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-bar">
+          <div class="tab-item active" onclick="switchTargetTab(0, this)">조건 검색</div>
+          <div class="tab-item" onclick="switchTargetTab(1, this)">개별 입력</div>
+          <div class="tab-item" onclick="switchTargetTab(2, this)">주소록</div>
+          <div class="tab-item" onclick="switchTargetTab(3, this)">엑셀 등록</div>
+        </div>
+
+        <!-- Tab 0: 조건 검색 -->
+        <div class="tab-panel active" id="tabPanel0">
+          <!-- [2-5] Chips -->
+          <div class="chip-area">
+            <!-- Dropdown -->
+            <div style="position:relative;">
+              <div class="chip-dropdown" onclick="toggleDropdown('savedConditionMenu')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+                내 저장 조건
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+              <div class="dropdown-menu" id="savedConditionMenu">
+                <div class="dropdown-empty">저장한 조건이 없습니다.</div>
+              </div>
+            </div>
+
+            <div class="chip chip-fav" onclick="applyChip('예약 환자')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="#F9A825" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              예약 환자
+            </div>
+            <div class="chip chip-fav" onclick="applyChip('초진 환자')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="#F9A825" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              초진 환자
+            </div>
+            <div class="chip" onclick="applyChip('신규 환자')">신규 환자</div>
+            <div class="chip chip-strong" onclick="openConditionModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              조건으로 환자 검색
+            </div>
+          </div>
+
+          <!-- [2-6] Preview -->
+          <div class="patient-preview" id="patientPreview">
+            <div class="patient-preview-empty" id="patientEmpty">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" color="var(--c-gray-300)">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              </svg>
+              조건 검색으로 원하는 환자를<br/>불러오세요
+            </div>
+            <div id="patientFilled" class="hidden">
+              <div class="patient-preview-header">
+                <strong>보낼 대상</strong>
+                <span class="patient-count-badge" id="patientCount">0명</span>
+              </div>
+              <div class="patient-list" id="patientList"></div>
+              <div class="detail-link"><a onclick="showToast('info','상세 조회 화면으로 이동합니다.')">상세 조회 · 편집 →</a></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 1: 개별 입력 -->
+        <div class="tab-panel" id="tabPanel1">
+          <div class="individual-search">
+            <input type="text" class="form-input" placeholder="환자명 또는 휴대폰 번호 입력" id="individualInput"/>
+            <button class="btn-search" onclick="addIndividualPatient()">추가</button>
+          </div>
+          <p class="individual-note">예: 홍길동 또는 010-1234-5678</p>
+          <div class="patient-preview" id="patientPreviewIndiv" style="margin-top:10px;">
+            <div class="patient-preview-empty" id="patientEmptyIndiv">
+              추가된 대상이 없습니다
+            </div>
+            <div id="patientFilledIndiv" class="hidden">
+              <div class="patient-preview-header">
+                <strong>보낼 대상</strong>
+                <span class="patient-count-badge" id="patientCountIndiv">0명</span>
+              </div>
+              <div class="patient-list" id="patientListIndiv"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: 주소록 -->
+        <div class="tab-panel" id="tabPanel2">
+          <div class="patient-preview-empty" style="border:1px solid var(--c-gray-200);border-radius:8px;margin-top:12px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--c-gray-300)" stroke-width="1.5">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+            저장된 주소록이 없습니다
+          </div>
+        </div>
+
+        <!-- Tab 3: 엑셀 등록 -->
+        <div class="tab-panel" id="tabPanel3">
+          <div class="excel-drop" onclick="showToast('info','파일 선택 창을 엽니다.')">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <p><strong>엑셀 파일을 드래그하거나 클릭하세요</strong></p>
+            <p style="margin-top:4px; font-size:11px;">의사랑 제공 샘플 양식 (.xlsx)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- [3] 보낼 시간 선택 -->
+      <div class="card">
+        <div class="card-title">
+          <span class="section-badge">3</span>
+          보낼 시간 선택
+        </div>
+
+        <div class="time-selector">
+          <button class="time-btn active" id="btnImmediate" onclick="switchTime('immediate')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            즉시 발송
+          </button>
+          <button class="time-btn" id="btnScheduled" onclick="switchTime('scheduled')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            예약 발송
+          </button>
+        </div>
+
+        <!-- 예약 폼 (hidden by default) -->
+        <div class="reservation-form hidden" id="reservationForm">
+          <div class="form-row">
+            <span class="form-label">예약 날짜</span>
+            <input type="date" class="form-input" id="resDate" style="cursor:pointer;" />
+          </div>
+          <div class="form-row">
+            <span class="form-label">예약 시간</span>
+            <select class="time-period-select" id="resPeriod">
+              <option>오전</option>
+              <option>오후</option>
+            </select>
+            <input type="number" class="form-input" id="resHour" min="1" max="12" placeholder="시" style="width:60px;flex:none;text-align:center;" />
+            <span style="color:var(--c-gray-400);">:</span>
+            <input type="number" class="form-input" id="resMin" min="0" max="59" placeholder="분" style="width:60px;flex:none;text-align:center;" />
+          </div>
+        </div>
+
+        <!-- 광고 야간 안내 -->
+        <div class="night-ad-notice hidden" id="nightAdNotice">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A5B00" stroke-width="2" style="flex-shrink:0;margin-top:1px;">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          광고 문자는 오전 8시 ~ 오후 10시에만 발송할 수 있습니다.
+        </div>
+      </div>
+
+    </div><!-- /col-left -->
+
+    <!-- ═══════════════════════════════════
+         RIGHT COLUMN
+    ═══════════════════════════════════ -->
+    <div class="col-right">
+
+      <!-- [5] 메시지 작성 -->
+      <div class="card" style="flex:1;display:flex;flex-direction:column;gap:10px;">
+        <div class="card-title">
+          <span class="section-badge">5</span>
+          메시지 작성
+        </div>
+
+        <!-- Input + Preview wrapper -->
+        <div class="msg-input-wrapper" style="position:relative;">
+          <!-- Preview bubble -->
+          <div class="msg-phone-preview">
+            <div id="adPrefix" class="phone-ad-prefix hidden">(광고) 의사랑 CRM</div>
+            <div class="phone-bubble" id="previewBubble">작성한 메시지가 여기에 미리보기됩니다.</div>
+          </div>
+
+          <!-- Textarea -->
+          <textarea class="msg-textarea" id="msgTextarea" placeholder="메시지 내용을 입력하세요." maxlength="2000"
+            oninput="onMsgInput(this)"></textarea>
+
+          <!-- Byte / Type row -->
+          <div class="byte-row">
+            <span class="byte-badge sms" id="msgTypeBadge">SMS</span>
+            <span class="byte-count" id="byteCount">0 / 90 byte</span>
+          </div>
+
+          <!-- Toolbar -->
+          <div class="msg-toolbar">
+            <button class="tool-btn" onclick="openTemplateModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              + 내 템플릿 불러오기
+            </button>
+            <div style="position:relative;">
+              <button class="tool-btn" onclick="togglePalette('specialPalette')">
+                # 특수문자
+              </button>
+              <div class="palette" id="specialPalette">
+                <div class="palette-title">특수문자</div>
+                <div class="special-chars" id="specialCharsGrid"></div>
+              </div>
+            </div>
+            <div style="position:relative;">
+              <button class="tool-btn" onclick="togglePalette('reservedPalette')">
+                ☆ 예약어
+              </button>
+              <div class="palette" id="reservedPalette">
+                <div class="palette-title">예약어 삽입</div>
+                <div class="reserved-list" id="reservedList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [5-8] 광고성 체크박스 -->
+        <div class="ad-row">
+          <label>
+            <input type="checkbox" id="adCheckbox" onchange="onAdChange(this)" />
+            광고성 문자 발송
+          </label>
+          <div class="tooltip-icon">?
+            <div class="tooltip-text">광고성 문자 발송 시 수신거부 번호 및 인증번호가 자동 추가됩니다.</div>
+          </div>
+        </div>
+
+        <!-- [5-9] 이미지 추가 -->
+        <div class="img-upload-row">
+          <span class="img-upload-label">이미지 추가 (<span id="imgCount">0</span>/3)</span>
+          <div id="imgTile0" class="img-tile" onclick="addImage(0)" title="이미지 추가">+</div>
+          <div id="imgTile1" class="img-tile" onclick="addImage(1)" title="이미지 추가">+</div>
+          <div id="imgTile2" class="img-tile" onclick="addImage(2)" title="이미지 추가">+</div>
+        </div>
+      </div>
+
+      <!-- [4] 발송 액션 -->
+      <div class="send-actions">
+        <button class="btn-save-condition" id="btnSaveCondition" onclick="openSaveConditionModal()">
+          발송 조건 저장하기
+        </button>
+        <button class="btn-send" onclick="handleSend()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          발송하기
+        </button>
+      </div>
+
+    </div><!-- /col-right -->
+  </div><!-- /body -->
+</div><!-- /main -->
+
+<!-- ═══════ PALETTES DATA (rendered by JS) ═══════ -->
+
+<!-- ═══════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════ -->
+
+<!-- Draft Confirm (6-2) -->
+<div class="modal-backdrop" id="modalDraft">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">임시 저장된 메시지가 있습니다</div>
+      <button class="modal-close" onclick="closeModal('modalDraft')">✕</button>
+    </div>
+    <div class="modal-body">임시 저장된 메시지가 있습니다.<br/>불러오시겠습니까?</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalDraft'); resetAll()">새로 작성</button>
+      <button class="btn btn-primary" onclick="closeModal('modalDraft'); loadDraft()">불러오기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Channel Change Confirm (1-1a) -->
+<div class="modal-backdrop" id="modalChannelChange">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">채널을 변경하시겠습니까?</div>
+      <button class="modal-close" onclick="closeModal('modalChannelChange')">✕</button>
+    </div>
+    <div class="modal-body">작성한 메시지 내용이 초기화됩니다.<br/>채널을 변경하시겠습니까?</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalChannelChange')">취소</button>
+      <button class="btn btn-primary" onclick="closeModal('modalChannelChange'); confirmChannelSwitch()">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mass Send Confirm (4-2a) -->
+<div class="modal-backdrop" id="modalMassSend">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">메시지를 대량으로 발송하시겠습니까?</div>
+      <button class="modal-close" onclick="closeModal('modalMassSend')">✕</button>
+    </div>
+    <div class="modal-body" id="massSendBody">
+      총 <strong id="massSendCount">0</strong>명에게 메시지를 발송합니다.
+      <div class="mass-checkbox-row">
+        <input type="checkbox" id="massConfirmCheck" />
+        <label for="massConfirmCheck">내용을 확인했으며 발송에 동의합니다.</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalMassSend')">취소</button>
+      <button class="btn btn-primary" onclick="confirmSend()">발송하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- LMS Confirm (4-2h / 4-2j) -->
+<div class="modal-backdrop" id="modalLmsConfirm">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">예약어를 포함하여 발송하시겠습니까?</div>
+      <button class="modal-close" onclick="closeModal('modalLmsConfirm')">✕</button>
+    </div>
+    <div class="modal-body">메시지에 예약어가 포함되어 있어 SMS가 LMS로 발송될 수 있습니다.</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalLmsConfirm')">취소</button>
+      <button class="btn btn-primary" onclick="closeModal('modalLmsConfirm'); proceedSend()">발송하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ad Privacy Info Confirm (4-2i) -->
+<div class="modal-backdrop" id="modalAdPrivacy">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">개인정보 동의 안내</div>
+      <button class="modal-close" onclick="closeModal('modalAdPrivacy')">✕</button>
+    </div>
+    <div class="modal-body">개인정보 동의를 한 환자에게만 발송됩니다.<br/>계속 진행하시겠습니까?</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalAdPrivacy')">취소</button>
+      <button class="btn btn-primary" onclick="closeModal('modalAdPrivacy'); proceedSend()">발송하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Save Condition (4-3) -->
+<div class="modal-backdrop" id="modalSaveCondition">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">발송 조건 저장하기</div>
+      <button class="modal-close" onclick="closeModal('modalSaveCondition')">✕</button>
+    </div>
+    <div class="modal-body">저장할 조건 이름을 입력하세요. (최대 30자)</div>
+    <input type="text" class="modal-input" id="conditionNameInput" placeholder="예: 예약 환자 주기 문자" maxlength="30" />
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalSaveCondition')">취소</button>
+      <button class="btn btn-primary" onclick="saveCondition()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Template Modal -->
+<div class="modal-backdrop" id="modalTemplate">
+  <div class="modal" style="width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">내 템플릿 불러오기</div>
+      <button class="modal-close" onclick="closeModal('modalTemplate')">✕</button>
+    </div>
+    <div class="modal-body" style="margin-bottom:12px;">저장된 템플릿을 선택하면 메시지에 적용됩니다.</div>
+    <div class="template-list" id="templateList"></div>
+    <div class="modal-footer" style="margin-top:14px;">
+      <button class="btn btn-outline" onclick="closeModal('modalTemplate')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Condition Search Modal -->
+<div class="modal-backdrop" id="modalConditionSearch">
+  <div class="modal" style="width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">조건으로 환자 검색</div>
+      <button class="modal-close" onclick="closeModal('modalConditionSearch')">✕</button>
+    </div>
+    <div class="condition-form" style="margin-bottom:16px;">
+      <div class="condition-row">
+        <div class="condition-label">방문 기간</div>
+        <select class="condition-select" id="condVisit">
+          <option>최근 1개월</option><option>최근 3개월</option><option>최근 6개월</option>
+          <option>최근 1년</option><option>전체</option>
+        </select>
+      </div>
+      <div class="condition-row">
+        <div class="condition-label">환자 유형</div>
+        <select class="condition-select" id="condType">
+          <option>전체</option><option>초진 환자</option><option>재진 환자</option>
+          <option>예약 환자</option><option>신규 환자</option>
+        </select>
+      </div>
+      <div class="condition-row">
+        <div class="condition-label">성별</div>
+        <select class="condition-select" id="condGender">
+          <option>전체</option><option>남성</option><option>여성</option>
+        </select>
+      </div>
+      <div class="condition-row">
+        <div class="condition-label">나이</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="number" class="form-input" id="condAgeMin" placeholder="최소" style="width:80px;"/> ~
+          <input type="number" class="form-input" id="condAgeMax" placeholder="최대" style="width:80px;"/>세
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalConditionSearch')">취소</button>
+      <button class="btn btn-primary" onclick="searchPatients()">환자 검색</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TOAST CONTAINER ═══════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════════
+     SCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+/* ══ STATE ══ */
+let currentChannel = 'sms';     // 'sms' | 'kakao'
+let pendingChannel = null;
+let currentTimeMode = 'immediate'; // 'immediate' | 'scheduled'
+let currentTargetTab = 0;
+let patients = [];
+let patientsIndiv = [];
+let msgContent = '';
+let isAdMessage = false;
+let imgCount = 0;
+let conditionPatientLoaded = false;
+
+/* ══ INIT ══ */
+document.addEventListener('DOMContentLoaded', () => {
+  initSpecialChars();
+  initReservedWords();
+  initTemplates();
+  setDefaultDate();
+  document.addEventListener('click', handleOutsideClick);
+});
+
+function setDefaultDate() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() + 30);
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById('resDate').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  let h = d.getHours();
+  document.getElementById('resPeriod').value = h < 12 ? '오전' : '오후';
+  h = h % 12 || 12;
+  document.getElementById('resHour').value = h;
+  document.getElementById('resMin').value = pad(d.getMinutes());
+}
+
+/* ══ CHANNEL ══ */
+function switchChannel(ch) {
+  if (ch === currentChannel) return;
+  if (msgContent.trim().length > 0) {
+    pendingChannel = ch;
+    openModal('modalChannelChange');
+  } else {
+    applyChannel(ch);
+  }
+}
+function confirmChannelSwitch() {
+  clearMsg();
+  applyChannel(pendingChannel);
+  pendingChannel = null;
+}
+function applyChannel(ch) {
+  currentChannel = ch;
+  document.getElementById('segSMS').classList.toggle('active', ch === 'sms');
+  document.getElementById('segKakao').classList.toggle('active', ch === 'kakao');
+  updateByteCount();
+}
+
+/* ══ TARGET TABS ══ */
+function switchTargetTab(idx, el) {
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach((p, i) => {
+    p.classList.toggle('active', i === idx);
+  });
+  currentTargetTab = idx;
+}
+
+/* ══ CHIPS / CONDITION ══ */
+function applyChip(name) {
+  const mockPatients = generateMockPatients(name);
+  patients = mockPatients;
+  renderPatients();
+  conditionPatientLoaded = true;
+  showSaveConditionBtn();
+}
+function openConditionModal() {
+  openModal('modalConditionSearch');
+}
+function searchPatients() {
+  closeModal('modalConditionSearch');
+  const type = document.getElementById('condType').value;
+  const mockPatients = generateMockPatients(type);
+  patients = mockPatients;
+  renderPatients();
+  conditionPatientLoaded = true;
+  showSaveConditionBtn();
+  showToast('success', `${mockPatients.length}명의 환자를 불러왔습니다.`);
+}
+function generateMockPatients(label) {
+  const pool = [
+    {name:'김민준', age:45, gender:'남', phone:'010-1234-5678'},
+    {name:'이서연', age:32, gender:'여', phone:'010-9876-5432'},
+    {name:'박지호', age:28, gender:'남', phone:'010-5555-1234'},
+    {name:'최수아', age:61, gender:'여', phone:'010-7777-8888'},
+    {name:'정예준', age:19, gender:'남', phone:'010-3333-2222'},
+  ];
+  const count = Math.floor(Math.random() * 3) + 2;
+  return pool.slice(0, count);
+}
+function renderPatients() {
+  const empty = document.getElementById('patientEmpty');
+  const filled = document.getElementById('patientFilled');
+  const list = document.getElementById('patientList');
+  const badge = document.getElementById('patientCount');
+
+  if (patients.length === 0) {
+    empty.classList.remove('hidden');
+    filled.classList.add('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  filled.classList.remove('hidden');
+  badge.textContent = `${patients.length}명`;
+  list.innerHTML = patients.map(p => `
+    <div class="patient-card">
+      <div class="patient-avatar">${p.name[0]}</div>
+      <div class="patient-info">
+        <div class="patient-name">${p.name} · ${p.gender} · ${p.age}세</div>
+        <div class="patient-phone">${p.phone}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function addIndividualPatient() {
+  const input = document.getElementById('individualInput');
+  const val = input.value.trim();
+  if (!val) return;
+  const p = {name: val, age: '-', gender: '-', phone: val.includes('-') ? val : '-'};
+  patientsIndiv.push(p);
+  renderPatientsIndiv();
+  input.value = '';
+}
+function renderPatientsIndiv() {
+  const empty = document.getElementById('patientEmptyIndiv');
+  const filled = document.getElementById('patientFilledIndiv');
+  const list = document.getElementById('patientListIndiv');
+  const badge = document.getElementById('patientCountIndiv');
+  if (patientsIndiv.length === 0) {
+    empty.classList.remove('hidden');
+    filled.classList.add('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  filled.classList.remove('hidden');
+  badge.textContent = `${patientsIndiv.length}명`;
+  list.innerHTML = patientsIndiv.map(p => `
+    <div class="patient-card">
+      <div class="patient-avatar">${p.name[0] || '?'}</div>
+      <div class="patient-info">
+        <div class="patient-name">${p.name}</div>
+        <div class="patient-phone">${p.phone}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showSaveConditionBtn() {
+  const btn = document.getElementById('btnSaveCondition');
+  const currentPatients = getCurrentPatients();
+  if (conditionPatientLoaded && currentTargetTab === 0 && currentPatients.length > 0) {
+    btn.classList.add('visible');
+  }
+}
+function getCurrentPatients() {
+  if (currentTargetTab === 0) return patients;
+  if (currentTargetTab === 1) return patientsIndiv;
+  return [];
+}
+
+/* ══ TIME ══ */
+function switchTime(mode) {
+  currentTimeMode = mode;
+  document.getElementById('btnImmediate').classList.toggle('active', mode === 'immediate');
+  document.getElementById('btnScheduled').classList.toggle('active', mode === 'scheduled');
+  const form = document.getElementById('reservationForm');
+  if (mode === 'scheduled') {
+    form.classList.remove('hidden');
+  } else {
+    form.classList.add('hidden');
+  }
+  checkNightAdNotice();
+}
+
+/* ══ MESSAGE INPUT ══ */
+function onMsgInput(el) {
+  msgContent = el.value;
+  document.getElementById('previewBubble').textContent =
+    el.value.trim() || '작성한 메시지가 여기에 미리보기됩니다.';
+  updateByteCount();
+}
+
+function getByteLength(str) {
+  let len = 0;
+  for (let i = 0; i < str.length; i++) {
+    len += (str.charCodeAt(i) > 127) ? 2 : 1;
+  }
+  return len;
+}
+
+function updateByteCount() {
+  const bytes = getByteLength(msgContent);
+  const badge = document.getElementById('msgTypeBadge');
+  const count = document.getElementById('byteCount');
+
+  let type, limit;
+  if (currentChannel === 'kakao') {
+    type = '카카오톡'; limit = 1000;
+    badge.className = 'byte-badge';
+    badge.style.background = '#FFF9C4';
+    badge.style.color = '#7A5B00';
+  } else if (bytes <= 90) {
+    type = 'SMS'; limit = 90;
+    badge.className = 'byte-badge sms';
+    badge.style = '';
+  } else if (bytes <= 2000) {
+    type = 'LMS'; limit = 2000;
+    badge.className = 'byte-badge lms';
+    badge.style = '';
+  } else {
+    type = 'MMS'; limit = 2000;
+    badge.className = 'byte-badge mms';
+    badge.style = '';
+  }
+  badge.textContent = type;
+  count.textContent = `${bytes} / ${limit} byte`;
+}
+
+function clearMsg() {
+  document.getElementById('msgTextarea').value = '';
+  msgContent = '';
+  document.getElementById('previewBubble').textContent = '작성한 메시지가 여기에 미리보기됩니다.';
+  updateByteCount();
+}
+
+/* ══ AD CHECKBOX ══ */
+function onAdChange(cb) {
+  isAdMessage = cb.checked;
+  document.getElementById('adPrefix').classList.toggle('hidden', !isAdMessage);
+  checkNightAdNotice();
+}
+function checkNightAdNotice() {
+  const now = new Date();
+  const h = now.getHours();
+  const isNight = h >= 22 || h < 8;
+  const notice = document.getElementById('nightAdNotice');
+  if (isAdMessage && (currentTimeMode === 'immediate' || currentTimeMode === 'scheduled')) {
+    notice.classList.toggle('hidden', !isNight);
+  } else {
+    notice.classList.add('hidden');
+  }
+}
+
+/* ══ IMAGE ══ */
+function addImage(idx) {
+  if (imgCount >= 3) return;
+  const tile = document.getElementById(`imgTile${idx}`);
+  if (tile.innerHTML !== '+') return;
+  // Simulate added image with a color swatch
+  const colors = ['#C7D9FF','#FFD6CC','#D4F1E4'];
+  tile.innerHTML = `<div style="width:100%;height:100%;background:${colors[idx]};display:flex;align-items:center;justify-content:center;font-size:20px;">🖼️</div>`;
+  imgCount++;
+  document.getElementById('imgCount').textContent = imgCount;
+  if (imgCount >= 3) showToast('info', '이미지는 최대 3개까지 첨부할 수 있습니다.');
+  updateByteCount();
+}
+
+/* ══ SEND FLOW ══ */
+function handleSend() {
+  const currentPats = getCurrentPatients();
+  // Validation
+  if (currentPats.length === 0) {
+    showToast('warning', '보낼 대상을 선택해주세요.');
+    return;
+  }
+  if (!msgContent.trim()) {
+    showToast('warning', '메시지를 입력해주세요.');
+    return;
+  }
+
+  // Night ad check
+  const now = new Date();
+  const h = now.getHours();
+  const isNight = h >= 22 || h < 8;
+  if (isAdMessage && currentTimeMode === 'immediate' && isNight) {
+    showToast('warning', '광고 문자는 야간 시간대를 제외하고 예약해 주세요.');
+    return;
+  }
+
+  // Reservation time validation
+  if (currentTimeMode === 'scheduled') {
+    const dateVal = document.getElementById('resDate').value;
+    const period = document.getElementById('resPeriod').value;
+    let hour = parseInt(document.getElementById('resHour').value) || 0;
+    const min = parseInt(document.getElementById('resMin').value) || 0;
+    if (period === '오후' && hour !== 12) hour += 12;
+    if (period === '오전' && hour === 12) hour = 0;
+    const resTime = new Date(`${dateVal}T${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')}:00`);
+    const diff = (resTime - now) / 1000;
+    if (diff <= 0) {
+      showToast('warning', '현재보다 이후 시간으로 예약해 주세요.');
+      return;
+    }
+    if (diff < 60) {
+      showToast('warning', '예약 시간을 최소 1분 이후로 설정해 주세요.');
+      return;
+    }
+    // Ad night reservation check
+    if (isAdMessage && (hour >= 22 || hour < 8)) {
+      showToast('warning', '광고는 야간 시간대를 제외한 다음날 오전 8시부터 보낼 수 있습니다.');
+      return;
+    }
+  }
+
+  // Ad privacy
+  if (isAdMessage) {
+    openModal('modalAdPrivacy');
+    return;
+  }
+
+  // Large send
+  if (currentPats.length >= 10) {
+    document.getElementById('massSendCount').textContent = currentPats.length;
+    document.getElementById('massConfirmCheck').checked = false;
+    openModal('modalMassSend');
+    return;
+  }
+
+  // LMS confirm
+  const bytes = getByteLength(msgContent);
+  if (bytes > 90 && msgContent.includes('#{')) {
+    openModal('modalLmsConfirm');
+    return;
+  }
+
+  proceedSend();
+}
+
+function confirmSend() {
+  const checked = document.getElementById('massConfirmCheck').checked;
+  if (!checked) {
+    showToast('warning', '발송 동의 체크박스를 선택해주세요.');
+    return;
+  }
+  closeModal('modalMassSend');
+  proceedSend();
+}
+
+function proceedSend() {
+  const mode = currentTimeMode;
+  setTimeout(() => {
+    if (mode === 'scheduled') {
+      showToast('success', '메시지를 예약했습니다.');
+    } else {
+      showToast('success', '메시지를 발송했습니다.');
+    }
+    // auto-save draft simulation
+    setTimeout(() => resetAfterSend(), 400);
+  }, 300);
+}
+
+function resetAfterSend() {
+  clearMsg();
+  patients = [];
+  patientsIndiv = [];
+  renderPatients();
+  renderPatientsIndiv();
+  conditionPatientLoaded = false;
+  document.getElementById('btnSaveCondition').classList.remove('visible');
+  document.getElementById('adCheckbox').checked = false;
+  isAdMessage = false;
+  document.getElementById('adPrefix').classList.add('hidden');
+}
+
+/* ══ SAVE CONDITION ══ */
+function openSaveConditionModal() {
+  document.getElementById('conditionNameInput').value = '';
+  openModal('modalSaveCondition');
+}
+function saveCondition() {
+  const name = document.getElementById('conditionNameInput').value.trim();
+  if (!name) {
+    showToast('warning', '조건 이름을 입력해주세요.');
+    return;
+  }
+  // Add to dropdown
+  const menu = document.getElementById('savedConditionMenu');
+  const emptyEl = menu.querySelector('.dropdown-empty');
+  if (emptyEl) emptyEl.remove();
+  const item = document.createElement('div');
+  item.className = 'dropdown-item';
+  item.textContent = name;
+  item.onclick = () => {
+    showToast('info', `"${name}" 조건을 불러왔습니다.`);
+    toggleDropdown('savedConditionMenu');
+  };
+  menu.appendChild(item);
+  closeModal('modalSaveCondition');
+  showToast('success', '발송 조건이 저장됐습니다.');
+}
+
+/* ══ DRAFT ══ */
+function showDraftConfirm() { openModal('modalDraft'); }
+function loadDraft() {
+  document.getElementById('msgTextarea').value = '[임시저장] 다음 주 건강검진 안내드립니다. 검진 날짜를 꼭 확인해 주세요.';
+  msgContent = document.getElementById('msgTextarea').value;
+  document.getElementById('previewBubble').textContent = msgContent;
+  updateByteCount();
+  showToast('success', '임시저장된 메시지를 불러왔습니다.');
+}
+function resetAll() {
+  clearMsg();
+  patients = [];
+  patientsIndiv = [];
+  renderPatients();
+  renderPatientsIndiv();
+}
+
+/* ══ TEMPLATE ══ */
+const TEMPLATES = [
+  { name: '검진 안내', body: '안녕하세요, #{이름}님.\n다음 주 건강검진 일정이 예정되어 있습니다.\n날짜: #{예약일}\n내원 부탁드립니다. — 의사랑 병원' },
+  { name: '예약 확인', body: '#{이름}님, #{예약일} #{예약시간} 예약이 확인되었습니다.\n변경이 필요하시면 연락 주세요.' },
+  { name: '재방문 안내', body: '#{이름}님, 안녕하세요!\n마지막 방문 후 3개월이 지났습니다. 정기 검진을 받아보세요.' },
+];
+function initTemplates() {
+  const list = document.getElementById('templateList');
+  list.innerHTML = TEMPLATES.map((t, i) => `
+    <div class="template-item" onclick="applyTemplate(${i})">
+      <div class="template-name">${t.name}</div>
+      <div class="template-preview">${t.body.substring(0, 60)}…</div>
+    </div>
+  `).join('');
+}
+function openTemplateModal() { openModal('modalTemplate'); }
+function applyTemplate(idx) {
+  const t = TEMPLATES[idx];
+  document.getElementById('msgTextarea').value = t.body;
+  msgContent = t.body;
+  document.getElementById('previewBubble').textContent = t.body;
+  updateByteCount();
+  closeModal('modalTemplate');
+  showToast('success', `"${t.name}" 템플릿을 불러왔습니다.`);
+}
+
+/* ══ SPECIAL CHARS ══ */
+const SPECIAL = ['★','☆','♥','♡','◆','◇','●','○','▶','▷','※','→','←','↑','↓','✓','☑','☐','❤','♦'];
+function initSpecialChars() {
+  const grid = document.getElementById('specialCharsGrid');
+  grid.innerHTML = SPECIAL.map(c => `
+    <div class="spec-char" onclick="insertChar('${c}')">${c}</div>
+  `).join('');
+}
+function insertChar(c) {
+  const ta = document.getElementById('msgTextarea');
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const val = ta.value;
+  ta.value = val.substring(0, start) + c + val.substring(end);
+  ta.selectionStart = ta.selectionEnd = start + c.length;
+  ta.focus();
+  msgContent = ta.value;
+  document.getElementById('previewBubble').textContent = ta.value || '작성한 메시지가 여기에 미리보기됩니다.';
+  updateByteCount();
+  togglePalette('specialPalette');
+}
+
+/* ══ RESERVED WORDS ══ */
+const RESERVED = [
+  { word: '#{이름}', desc: '환자 이름' },
+  { word: '#{병원명}', desc: '병원 이름' },
+  { word: '#{예약일}', desc: '예약 날짜' },
+  { word: '#{예약시간}', desc: '예약 시간' },
+  { word: '#{진료과}', desc: '진료 과목' },
+  { word: '#{담당의}', desc: '담당 의사' },
+];
+function initReservedWords() {
+  const list = document.getElementById('reservedList');
+  list.innerHTML = RESERVED.map(r => `
+    <div class="reserved-item" onclick="insertReserved('${r.word}')">
+      ${r.word} <span>${r.desc}</span>
+    </div>
+  `).join('');
+}
+function insertReserved(word) {
+  const ta = document.getElementById('msgTextarea');
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const val = ta.value;
+  ta.value = val.substring(0, start) + word + val.substring(end);
+  ta.selectionStart = ta.selectionEnd = start + word.length;
+  ta.focus();
+  msgContent = ta.value;
+  document.getElementById('previewBubble').textContent = ta.value;
+  updateByteCount();
+  togglePalette('reservedPalette');
+}
+
+/* ══ PALETTES ══ */
+function togglePalette(id) {
+  const palette = document.getElementById(id);
+  const allPalettes = document.querySelectorAll('.palette');
+  allPalettes.forEach(p => { if (p.id !== id) p.classList.remove('open'); });
+  palette.classList.toggle('open');
+}
+
+/* ══ DROPDOWN ══ */
+function toggleDropdown(id) {
+  const menu = document.getElementById(id);
+  const allMenus = document.querySelectorAll('.dropdown-menu');
+  allMenus.forEach(m => { if (m.id !== id) m.classList.remove('open'); });
+  menu.classList.toggle('open');
+}
+
+function handleOutsideClick(e) {
+  if (!e.target.closest('.dropdown-menu') && !e.target.closest('.chip-dropdown')) {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+  }
+  if (!e.target.closest('.palette') && !e.target.closest('.tool-btn')) {
+    document.querySelectorAll('.palette').forEach(p => p.classList.remove('open'));
+  }
+}
+
+/* ══ MODALS ══ */
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+/* ══ TOAST ══ */
+function showToast(type, message) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+
+  const icons = {
+    warning: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    success: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    info: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  };
+
+  toast.innerHTML = `${icons[type] || ''} ${message}`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(8px)';
+    toast.style.transition = 'opacity .3s, transform .3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+/* ── Auto-save on page visibility change ── */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && (msgContent.trim() || patients.length > 0)) {
+    showToast('success', '임시저장 됐습니다.');
+  }
+});
+</script>
+</body>
+</html>

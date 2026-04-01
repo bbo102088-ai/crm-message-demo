@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEND_00 메시지 발송</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #F5F6FA; color: #1A1D27; font-size: 14px; }
+
+  /* ───── Layout ───── */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ───── Sidebar ───── */
+  .sidebar {
+    width: 64px; background: #1A1D27; display: flex; flex-direction: column;
+    align-items: center; padding: 16px 0; gap: 4px; flex-shrink: 0;
+  }
+  .sidebar-logo { width: 36px; height: 36px; background: #4F55F0; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .sidebar-logo span { color: #fff; font-size: 16px; font-weight: 700; }
+  .nav-item {
+    width: 48px; height: 48px; border-radius: 10px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px; cursor: pointer;
+    color: #8A8FA8; transition: background 0.15s, color 0.15s;
+  }
+  .nav-item:hover { background: #2A2E3F; color: #C5C8D6; }
+  .nav-item.active { background: #4F55F0; color: #fff; }
+  .nav-item .icon { font-size: 18px; }
+  .nav-item .label { font-size: 9px; font-weight: 500; }
+
+  /* ───── Main ───── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Header */
+  .header {
+    height: 56px; background: #fff; border-bottom: 1px solid #E4E6EF;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; flex-shrink: 0;
+  }
+  .header h1 { font-size: 18px; font-weight: 700; color: #1A1D27; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid #E4E6EF;
+    background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #6B7080;
+  }
+  .icon-btn:hover { background: #F5F6FA; }
+
+  /* Quick Banner */
+  .quick-banner {
+    margin: 16px 20px 0; padding: 14px 20px;
+    background: linear-gradient(135deg, #4F55F0 0%, #7B5FFF 100%);
+    border-radius: 12px; display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .quick-banner:hover { opacity: 0.92; }
+  .quick-banner-text { color: #fff; }
+  .quick-banner-text .title { font-size: 14px; font-weight: 700; }
+  .quick-banner-text .sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .quick-banner-arrow { color: #fff; font-size: 20px; }
+
+  /* Content area */
+  .content { flex: 1; display: flex; gap: 16px; padding: 16px 20px; overflow: hidden; }
+
+  /* Left Column */
+  .col-left { width: 380px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex-shrink: 0; }
+  /* Right Column */
+  .col-right { flex: 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+
+  /* Card */
+  .card {
+    background: #fff; border-radius: 14px; padding: 20px;
+    border: 1px solid #E4E6EF;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 700; color: #6B7080; text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+  }
+  .section-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 5px; background: #EEF0FF;
+    color: #4F55F0; font-size: 10px; font-weight: 800;
+  }
+
+  /* ───── [1] 채널 선택 ───── */
+  .segment-control {
+    display: flex; background: #F5F6FA; border-radius: 10px; padding: 4px; gap: 2px;
+  }
+  .segment-btn {
+    flex: 1; padding: 9px 0; border: none; background: transparent;
+    border-radius: 8px; font-size: 14px; font-weight: 600; color: #6B7080;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .segment-btn.active { background: #fff; color: #4F55F0; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+  /* ───── [2] 보낼 대상 탭 ───── */
+  .tab-bar {
+    display: flex; border-bottom: 2px solid #F0F1F6; gap: 0; margin-bottom: 14px;
+  }
+  .tab {
+    padding: 8px 14px; font-size: 13px; font-weight: 600; color: #8A8FA8;
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .tab.active { color: #4F55F0; border-bottom-color: #4F55F0; }
+  .tab:hover:not(.active) { color: #4F55F0; }
+
+  /* Chip area */
+  .chip-area { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1.5px solid #E4E6EF; background: #fff; color: #4B5060;
+    transition: all 0.15s;
+  }
+  .chip:hover { border-color: #4F55F0; color: #4F55F0; }
+  .chip.dropdown { background: #F5F6FA; border-color: #D6D9E8; }
+  .chip.favorite { border-color: #FFB800; color: #B87D00; background: #FFFBEC; }
+  .chip.favorite .star { color: #FFB800; }
+  .chip.strong { background: #4F55F0; color: #fff; border-color: #4F55F0; }
+  .chip.strong:hover { background: #3D42D0; }
+
+  /* Preview area */
+  .preview-area {
+    background: #F9FAFC; border-radius: 10px; border: 1px dashed #D0D3E8;
+    min-height: 120px; display: flex; flex-direction: column;
+  }
+  .preview-empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; padding: 24px; color: #A0A4B8;
+  }
+  .preview-empty .icon { font-size: 28px; }
+  .preview-empty p { font-size: 12px; text-align: center; line-height: 1.5; }
+  .preview-filled { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .patient-card {
+    background: #fff; border-radius: 8px; padding: 10px 12px;
+    border: 1px solid #E4E6EF; display: flex; align-items: center; gap: 10px;
+  }
+  .patient-avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: #EEF0FF;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; color: #4F55F0;
+  }
+  .patient-info { flex: 1; }
+  .patient-name { font-size: 13px; font-weight: 700; }
+  .patient-meta { font-size: 11px; color: #8A8FA8; margin-top: 1px; }
+  .preview-footer {
+    padding: 8px 12px; border-top: 1px solid #E4E6EF;
+    text-align: right; font-size: 12px; color: #4F55F0; cursor: pointer;
+  }
+  .preview-footer:hover { text-decoration: underline; }
+  .recipient-count {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; background: #EEF0FF; border-radius: 20px;
+    font-size: 12px; font-weight: 700; color: #4F55F0; margin-bottom: 8px;
+  }
+
+  /* ───── [3] 보낼 시간 ───── */
+  .time-selector { display: flex; gap: 10px; margin-bottom: 14px; }
+  .time-option {
+    flex: 1; padding: 12px; border-radius: 10px; border: 2px solid #E4E6EF;
+    background: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: #6B7080; transition: all 0.15s;
+  }
+  .time-option.active { border-color: #4F55F0; background: #F0F1FF; color: #4F55F0; }
+  .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #D0D3E8; background: #fff; flex-shrink: 0; }
+  .radio.checked { border-color: #4F55F0; background: #4F55F0; box-shadow: inset 0 0 0 3px #fff; }
+
+  .schedule-form { display: flex; flex-direction: column; gap: 10px; }
+  .form-row { display: flex; gap: 8px; }
+  .form-label { font-size: 12px; font-weight: 600; color: #6B7080; margin-bottom: 5px; }
+  .input-field {
+    width: 100%; padding: 9px 12px; border: 1.5px solid #E4E6EF; border-radius: 8px;
+    font-size: 13px; color: #1A1D27; background: #fff; outline: none;
+    transition: border-color 0.15s;
+  }
+  .input-field:focus { border-color: #4F55F0; }
+  .select-field {
+    padding: 9px 10px; border: 1.5px solid #E4E6EF; border-radius: 8px;
+    font-size: 13px; color: #1A1D27; background: #fff; outline: none; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+  }
+  .select-field:focus { border-color: #4F55F0; }
+  .input-group { display: flex; align-items: center; gap: 6px; }
+  .input-sm { width: 60px; }
+  .input-sep { color: #8A8FA8; font-weight: 700; }
+
+  /* Ad guide */
+  .ad-guide {
+    background: #FFF9EC; border: 1px solid #FFD97A; border-radius: 8px;
+    padding: 10px 12px; font-size: 12px; color: #7D5A00; line-height: 1.6;
+    display: none;
+  }
+  .ad-guide.visible { display: block; }
+
+  /* ───── [5] 메시지 작성 ───── */
+  .message-textarea {
+    width: 100%; min-height: 180px; padding: 12px; border: 1.5px solid #E4E6EF;
+    border-radius: 10px; font-size: 14px; line-height: 1.6; resize: none; outline: none;
+    font-family: inherit; transition: border-color 0.15s;
+  }
+  .message-textarea:focus { border-color: #4F55F0; }
+
+  .message-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 6px; margin-bottom: 10px;
+  }
+  .byte-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; background: #F5F6FA; border-radius: 6px;
+    font-size: 12px; color: #6B7080;
+  }
+  .byte-badge .type-label {
+    background: #4F55F0; color: #fff; padding: 1px 6px; border-radius: 4px;
+    font-size: 10px; font-weight: 700;
+  }
+
+  .msg-toolbar {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+  }
+  .toolbar-btn {
+    padding: 6px 12px; border: 1.5px solid #E4E6EF; border-radius: 8px;
+    background: #fff; font-size: 12px; font-weight: 600; color: #4B5060;
+    cursor: pointer; display: flex; align-items: center; gap: 4px;
+    transition: all 0.15s;
+  }
+  .toolbar-btn:hover { border-color: #4F55F0; color: #4F55F0; background: #F0F1FF; }
+
+  /* Image upload area */
+  .image-upload-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .image-tile {
+    width: 80px; height: 80px; border: 2px dashed #D0D3E8; border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; color: #A0A4B8; font-size: 11px; gap: 4px; transition: all 0.15s;
+  }
+  .image-tile:hover { border-color: #4F55F0; color: #4F55F0; background: #F0F1FF; }
+  .image-tile .plus { font-size: 20px; font-weight: 300; }
+
+  /* Ad checkbox */
+  .checkbox-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; background: #F9FAFC; border-radius: 8px; margin-bottom: 12px;
+  }
+  .checkbox {
+    width: 18px; height: 18px; border: 2px solid #D0D3E8; border-radius: 4px;
+    background: #fff; cursor: pointer; flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center; transition: all 0.15s;
+  }
+  .checkbox.checked { background: #4F55F0; border-color: #4F55F0; }
+  .checkbox.checked::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 700; }
+  .checkbox-label { font-size: 13px; font-weight: 600; color: #4B5060; cursor: pointer; flex: 1; }
+  .tooltip-btn {
+    width: 18px; height: 18px; border-radius: 50%; background: #A0A4B8;
+    color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center;
+    justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+
+  /* ───── Buttons ───── */
+  .btn-send {
+    width: 100%; padding: 14px; background: #4F55F0; color: #fff; border: none;
+    border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: background 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-send:hover { background: #3D42D0; }
+  .btn-save-condition {
+    width: 100%; padding: 11px; background: #fff; color: #4F55F0;
+    border: 1.5px solid #4F55F0; border-radius: 12px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; margin-top: 8px;
+  }
+  .btn-save-condition:hover { background: #F0F1FF; }
+
+  /* Palette popup */
+  .palette {
+    display: none; position: absolute; background: #fff; border: 1.5px solid #E4E6EF;
+    border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); padding: 12px;
+    z-index: 100; width: 260px;
+  }
+  .palette.visible { display: block; }
+  .palette-title { font-size: 11px; font-weight: 700; color: #8A8FA8; margin-bottom: 8px; text-transform: uppercase; }
+  .palette-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+  .palette-item {
+    padding: 5px 9px; background: #F5F6FA; border-radius: 6px;
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .palette-item:hover { background: #EEF0FF; color: #4F55F0; }
+
+  /* Toast */
+  .toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast {
+    display: flex; align-items: center; gap: 10px; padding: 12px 20px;
+    border-radius: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    animation: slideUp 0.25s ease; white-space: nowrap;
+  }
+  .toast.warning { background: #FFF4EC; color: #7D3A00; border: 1px solid #FFB87A; }
+  .toast.success { background: #EDFBF4; color: #0D6B3A; border: 1px solid #6EE2A4; }
+  .toast.info { background: #EEF5FF; color: #1A4799; border: 1px solid #7AB2FF; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Confirm Dialog */
+  .overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .overlay.visible { display: flex; }
+  .dialog {
+    background: #fff; border-radius: 16px; padding: 28px; width: 360px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  }
+  .dialog-title { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+  .dialog-body { font-size: 14px; color: #6B7080; line-height: 1.6; margin-bottom: 22px; }
+  .dialog-actions { display: flex; gap: 8px; }
+  .btn-dialog {
+    flex: 1; padding: 11px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s; border: none;
+  }
+  .btn-dialog.secondary { background: #F5F6FA; color: #4B5060; }
+  .btn-dialog.secondary:hover { background: #E8E9F5; }
+  .btn-dialog.primary { background: #4F55F0; color: #fff; }
+  .btn-dialog.primary:hover { background: #3D42D0; }
+
+  /* ═══════════════════════════════════════
+     FILTER MODAL — FILTER_00 / 01 / 02
+  ═══════════════════════════════════════ */
+  .filter-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 300;
+    align-items: center; justify-content: center;
+  }
+  .filter-overlay.visible { display: flex; }
+
+  /* FILTER_00 / FILTER_02 메인 모달 */
+  .filter-modal {
+    width: 920px; max-width: 96vw; height: 86vh;
+    background: #fff; border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .filter-modal-header {
+    padding: 18px 22px; border-bottom: 1px solid #E4E6EF;
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .filter-modal-header h2 { font-size: 17px; font-weight: 800; flex: 1; }
+  .filter-modal-body {
+    flex: 1; display: flex; overflow: hidden;
+  }
+
+  /* [1] 조건 추가 목록 (좌) */
+  .filter-left {
+    width: 240px; border-right: 1px solid #E4E6EF;
+    display: flex; flex-direction: column; flex-shrink: 0;
+    overflow: hidden;
+  }
+  .filter-left-title {
+    padding: 12px 16px; font-size: 12px; font-weight: 700;
+    color: #8A8FA8; text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid #F0F1F6; flex-shrink: 0;
+  }
+  .filter-left-scroll { flex: 1; overflow-y: auto; padding: 6px 0; }
+  .accordion-item { border-bottom: 1px solid #F5F6FA; }
+  .accordion-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; font-size: 13px; font-weight: 600;
+    color: #3A3D50; transition: background 0.12s;
+  }
+  .accordion-head:hover { background: #F5F6FA; }
+  .accordion-head.open { color: #4F55F0; background: #F0F1FF; }
+  .accordion-head .acc-arrow { font-size: 11px; color: #A0A4B8; transition: transform 0.15s; }
+  .accordion-head.open .acc-arrow { transform: rotate(90deg); color: #4F55F0; }
+  .accordion-body { display: none; background: #FAFBFF; }
+  .accordion-body.open { display: block; }
+  .cond-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 18px 8px 24px; font-size: 12px; color: #4B5060;
+    cursor: pointer; transition: background 0.12s;
+  }
+  .cond-item:hover { background: #EEF0FF; color: #4F55F0; }
+  .cond-item:hover .cond-add { display: inline-flex; }
+  .cond-add {
+    display: none; width: 20px; height: 20px; background: #4F55F0;
+    border-radius: 5px; color: #fff; font-size: 13px; font-weight: 700;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  /* [2] 조건 적용 영역 (우) */
+  .filter-right {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .filter-right-inner {
+    flex: 1; overflow-y: auto; padding: 16px 18px;
+  }
+  .filter-section-head {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+  }
+  .filter-count-badge {
+    font-size: 13px; font-weight: 700; color: #1A1D27; flex: 1;
+  }
+  .filter-count-badge span { color: #4F55F0; }
+
+  /* 고급 모드 토글 */
+  .adv-toggle {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: #6B7080; cursor: pointer;
+    padding: 5px 10px; border: 1.5px solid #D0D3E8; border-radius: 8px;
+    transition: all 0.15s;
+  }
+  .adv-toggle:hover { border-color: #4F55F0; color: #4F55F0; }
+  .adv-toggle.on { border-color: #4F55F0; color: #4F55F0; background: #EEF0FF; }
+  .toggle-pip {
+    width: 28px; height: 16px; border-radius: 8px; background: #D0D3E8;
+    position: relative; transition: background 0.15s; flex-shrink: 0;
+  }
+  .toggle-pip::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 12px; height: 12px; border-radius: 50%; background: #fff;
+    transition: left 0.15s;
+  }
+  .adv-toggle.on .toggle-pip { background: #4F55F0; }
+  .adv-toggle.on .toggle-pip::after { left: 14px; }
+
+  /* 저장/초기화 버튼 */
+  .filter-action-btn {
+    padding: 6px 12px; border: 1.5px solid #E4E6EF; border-radius: 8px;
+    background: #fff; font-size: 12px; font-weight: 600; color: #4B5060;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filter-action-btn:hover { border-color: #4F55F0; color: #4F55F0; }
+
+  /* [2-4] 기간 설정 */
+  .period-card {
+    background: #F5F6FA; border-radius: 10px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .period-label { font-size: 12px; font-weight: 700; color: #4B5060; flex-shrink: 0; }
+  .period-shortcuts { display: flex; gap: 5px; flex-wrap: wrap; }
+  .period-chip {
+    padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: 600;
+    border: 1.5px solid #D0D3E8; background: #fff; color: #6B7080; cursor: pointer;
+    transition: all 0.12s;
+  }
+  .period-chip.active { border-color: #4F55F0; background: #EEF0FF; color: #4F55F0; }
+  .period-date-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .period-input { padding: 5px 8px; border: 1.5px solid #D0D3E8; border-radius: 7px; font-size: 12px; outline: none; }
+  .period-input:focus { border-color: #4F55F0; }
+
+  /* [2-5] 안내 문구 */
+  .filter-guide {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 90px; color: #A0A4B8; gap: 6px; padding: 20px;
+    border: 1.5px dashed #D0D3E8; border-radius: 10px; text-align: center; font-size: 13px;
+  }
+
+  /* 추가된 조건 목록 [2-7] */
+  .applied-conds { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .applied-cond-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .operator-badge {
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 5px;
+    cursor: pointer; user-select: none; flex-shrink: 0;
+  }
+  .operator-badge.and { background: #EEF0FF; color: #4F55F0; }
+  .operator-badge.or  { background: #FFF4EC; color: #E67422; }
+  .cond-pill {
+    flex: 1; background: #F5F6FA; border: 1px solid #E4E6EF; border-radius: 8px;
+    padding: 8px 12px; font-size: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .cond-pill-name { font-weight: 600; color: #1A1D27; flex-shrink: 0; }
+  .cond-pill-value { color: #6B7080; flex: 1; }
+  .cond-pill-excl { font-size: 11px; color: #E05050; font-weight: 600; flex-shrink: 0; }
+  .cond-del-btn {
+    width: 22px; height: 22px; border-radius: 5px; background: #FFE8E8;
+    color: #C84040; font-size: 13px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0; border: none;
+    transition: background 0.12s;
+  }
+  .cond-del-btn:hover { background: #FFCECE; }
+
+  /* [3] 환자 결과 영역 */
+  .result-area {
+    margin: 12px 0; padding: 12px 14px; background: #EDFBF4;
+    border: 1px solid #A5E6C5; border-radius: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .result-count { font-size: 15px; font-weight: 800; color: #1A1D27; flex: 1; }
+  .result-count span { color: #00875A; }
+  .result-detail-btn {
+    font-size: 12px; font-weight: 600; color: #4F55F0; cursor: pointer;
+    padding: 5px 10px; border: 1.5px solid #4F55F0; border-radius: 7px;
+    background: #fff; transition: all 0.12s;
+  }
+  .result-detail-btn:hover { background: #EEF0FF; }
+
+  /* [4] 저장한 조건 */
+  .saved-cond-area {
+    border-top: 1px solid #F0F1F6; padding-top: 14px; margin-top: 4px;
+  }
+  .saved-cond-label { font-size: 12px; font-weight: 700; color: #8A8FA8; margin-bottom: 8px; }
+  .saved-cond-row { display: flex; gap: 8px; align-items: center; }
+  .saved-cond-select {
+    flex: 1; padding: 8px 10px; border: 1.5px solid #D0D3E8; border-radius: 8px;
+    font-size: 12px; background: #fff; color: #4B5060; outline: none; cursor: pointer;
+  }
+  .saved-cond-select:focus { border-color: #4F55F0; }
+  .saved-cond-btn {
+    padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1.5px solid #D0D3E8; background: #fff; color: #4B5060;
+    transition: all 0.12s; white-space: nowrap;
+  }
+  .saved-cond-btn:hover { border-color: #4F55F0; color: #4F55F0; }
+
+  /* [5] 환자 불러오기 버튼 */
+  .filter-footer {
+    padding: 14px 18px; border-top: 1px solid #E4E6EF;
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  .btn-fetch {
+    flex: 1; padding: 13px; background: #4F55F0; color: #fff; border: none;
+    border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-fetch:hover:not(:disabled) { background: #3D42D0; }
+  .btn-fetch:disabled { background: #C8CAE6; cursor: not-allowed; }
+  .btn-fetch-add {
+    padding: 13px 18px; background: #fff; border: 1.5px solid #D0D3E8;
+    border-radius: 10px; font-size: 13px; font-weight: 600; color: #4B5060;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-fetch-add:hover { border-color: #4F55F0; color: #4F55F0; }
+
+  /* ── 고급 모드: 그룹 카드 ── */
+  .adv-group-card {
+    border: 2px solid #E4E6EF; border-radius: 12px; padding: 14px;
+    margin-bottom: 8px; transition: all 0.15s; cursor: pointer;
+  }
+  .adv-group-card.active { border-color: #4F55F0; background: #FAFBFF; }
+  .adv-group-card.disabled { opacity: 0.5; pointer-events: none; }
+  .adv-group-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .adv-group-title { font-size: 12px; font-weight: 700; color: #4B5060; flex: 1; }
+  .adv-operator-select {
+    padding: 4px 8px; border: 1.5px solid #D0D3E8; border-radius: 6px;
+    font-size: 11px; font-weight: 600; background: #fff; outline: none;
+    cursor: pointer;
+  }
+  .adv-operator-select:disabled { background: #F5F6FA; color: #A0A4B8; cursor: not-allowed; }
+  .adv-group-del {
+    padding: 4px 8px; border: none; background: #FFE8E8; color: #C84040;
+    border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .adv-group-guide {
+    background: #F5F6FA; border-radius: 8px; padding: 14px;
+    text-align: center; color: #A0A4B8; font-size: 12px;
+  }
+  .adv-group-sep {
+    display: flex; align-items: center; gap: 8px; margin: 4px 0;
+  }
+  .adv-group-sep select {
+    padding: 3px 8px; border: 1.5px solid #D0D3E8; border-radius: 6px;
+    font-size: 11px; font-weight: 700; background: #fff; outline: none; cursor: pointer;
+  }
+  .adv-sep-line { flex: 1; border: none; border-top: 1px dashed #D0D3E8; }
+  .btn-add-group {
+    width: 100%; padding: 10px; border: 2px dashed #C0C4E0; border-radius: 10px;
+    background: #fff; color: #4F55F0; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-add-group:hover { background: #F0F1FF; border-color: #4F55F0; }
+
+  /* ═══════════════════════════════════════
+     FILTER_01: 상세 조회·편집 모달
+  ═══════════════════════════════════════ */
+  .detail-modal {
+    width: 860px; max-width: 96vw; height: 86vh;
+    background: #fff; border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .detail-modal-header {
+    padding: 16px 22px; border-bottom: 1px solid #E4E6EF;
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  .detail-modal-header h2 { font-size: 16px; font-weight: 800; flex: 1; }
+  .detail-cond-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .detail-cond-tag {
+    padding: 3px 8px; background: #EEF0FF; border-radius: 5px;
+    font-size: 11px; font-weight: 600; color: #4F55F0;
+  }
+  .detail-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 16px 20px; gap: 12px; }
+  .detail-toolbar {
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  .detail-search {
+    flex: 1; padding: 8px 12px; border: 1.5px solid #D0D3E8; border-radius: 8px;
+    font-size: 13px; outline: none;
+  }
+  .detail-search:focus { border-color: #4F55F0; }
+  .detail-count-badge {
+    font-size: 13px; font-weight: 700; color: #1A1D27;
+  }
+  .detail-count-badge span { color: #4F55F0; }
+  .tbl-wrap { flex: 1; overflow: auto; border: 1px solid #E4E6EF; border-radius: 10px; }
+  table.patient-tbl {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  table.patient-tbl thead { position: sticky; top: 0; background: #F5F6FA; z-index: 1; }
+  table.patient-tbl th {
+    padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 700;
+    color: #6B7080; border-bottom: 1px solid #E4E6EF; white-space: nowrap;
+    user-select: none; cursor: col-resize;
+  }
+  table.patient-tbl td {
+    padding: 10px 12px; border-bottom: 1px solid #F0F1F6; color: #1A1D27;
+    white-space: nowrap;
+  }
+  table.patient-tbl tr:hover td { background: #FAFBFF; }
+  table.patient-tbl tr.selected td { background: #F0F1FF; }
+  table.patient-tbl input[type=checkbox] { cursor: pointer; accent-color: #4F55F0; }
+  .detail-footer {
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding-top: 4px;
+  }
+  .pagination { display: flex; gap: 4px; align-items: center; flex: 1; }
+  .pg-btn {
+    width: 30px; height: 30px; border-radius: 6px; border: 1.5px solid #E4E6EF;
+    background: #fff; font-size: 12px; font-weight: 600; cursor: pointer; color: #4B5060;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pg-btn.active { background: #4F55F0; color: #fff; border-color: #4F55F0; }
+  .pg-btn:hover:not(.active) { border-color: #4F55F0; color: #4F55F0; }
+  .btn-confirm-total {
+    padding: 11px 22px; background: #4F55F0; color: #fff; border: none;
+    border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: background 0.15s; white-space: nowrap;
+  }
+  .btn-confirm-total:hover { background: #3D42D0; }
+  .btn-prev {
+    padding: 11px 16px; background: #fff; border: 1.5px solid #D0D3E8;
+    border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+    color: #4B5060; transition: all 0.15s;
+  }
+  .btn-prev:hover { border-color: #4F55F0; color: #4F55F0; }
+  .sel-del-btn {
+    padding: 7px 12px; border: 1.5px solid #FFCECE; border-radius: 8px;
+    background: #FFF5F5; color: #C84040; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .sel-del-btn:hover { background: #FFE8E8; }
+  .sel-reset-btn {
+    padding: 7px 12px; border: 1.5px solid #D0D3E8; border-radius: 8px;
+    background: #fff; color: #4B5060; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .sel-reset-btn:hover { border-color: #4F55F0; color: #4F55F0; }
+
+  /* Scrollbar (filter) */
+  .filter-left-scroll::-webkit-scrollbar,
+  .filter-right-inner::-webkit-scrollbar,
+  .tbl-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+  .filter-left-scroll::-webkit-scrollbar-thumb,
+  .filter-right-inner::-webkit-scrollbar-thumb,
+  .tbl-wrap::-webkit-scrollbar-thumb { background: #D0D3E8; border-radius: 4px; }
+
+  /* Scrollbar */
+  .col-left::-webkit-scrollbar, .col-right::-webkit-scrollbar { width: 4px; }
+  .col-left::-webkit-scrollbar-track, .col-right::-webkit-scrollbar-track { background: transparent; }
+  .col-left::-webkit-scrollbar-thumb, .col-right::-webkit-scrollbar-thumb { background: #D0D3E8; border-radius: 4px; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid #F0F1F6; margin: 14px 0; }
+
+  /* Temp save bar */
+  .temp-bar {
+    background: #fff; border-top: 1px solid #E4E6EF; padding: 8px 24px;
+    display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;
+  }
+  .temp-label { font-size: 12px; color: #8A8FA8; }
+  .temp-date { font-size: 12px; font-weight: 600; color: #4B5060; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo"><span>의</span></div>
+    <div class="nav-item" title="홈">
+      <span class="icon">🏠</span>
+      <span class="label">홈</span>
+    </div>
+    <div class="nav-item active" title="메시지 발송">
+      <span class="icon">💬</span>
+      <span class="label">발송</span>
+    </div>
+    <div class="nav-item" title="발송 내역">
+      <span class="icon">📋</span>
+      <span class="label">내역</span>
+    </div>
+    <div class="nav-item" title="주소록">
+      <span class="icon">👥</span>
+      <span class="label">주소록</span>
+    </div>
+    <div class="nav-item" title="통계">
+      <span class="icon">📊</span>
+      <span class="label">통계</span>
+    </div>
+    <div class="nav-item" title="환경설정" style="margin-top:auto">
+      <span class="icon">⚙️</span>
+      <span class="label">설정</span>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Header -->
+    <header class="header">
+      <h1>메시지 발송</h1>
+      <div class="header-actions">
+        <button class="icon-btn" title="메일함">✉️</button>
+      </div>
+    </header>
+
+    <!-- Quick Banner [7] -->
+    <div class="quick-banner" onclick="showToast('빠른 메시지 설정을 불러왔습니다.', 'success')">
+      <div class="quick-banner-text">
+        <div class="title">⚡ 빠르게 메시지 설정 불러오기</div>
+        <div class="sub">클릭 한 번으로 메시지 준비 완료!</div>
+      </div>
+      <div class="quick-banner-arrow">›</div>
+    </div>
+
+    <!-- Content Columns -->
+    <div class="content">
+
+      <!-- ══════ LEFT COLUMN ══════ -->
+      <div class="col-left">
+
+        <!-- [1] 채널 선택 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="section-badge">1</span>채널 선택
+          </div>
+          <div class="segment-control">
+            <button class="segment-btn active" id="ch-sms" onclick="selectChannel('sms')">
+              📱 문자
+            </button>
+            <button class="segment-btn" id="ch-kakao" onclick="selectChannel('kakao')">
+              💛 카카오톡
+            </button>
+          </div>
+        </div>
+
+        <!-- [2] 보낼 대상 선택 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="section-badge">2</span>보낼 대상 선택
+          </div>
+
+          <!-- 탭 -->
+          <div class="tab-bar">
+            <div class="tab active" onclick="selectTab(this, 'tab-condition')">조건 검색</div>
+            <div class="tab" onclick="selectTab(this, 'tab-individual')">개별 입력</div>
+            <div class="tab" onclick="selectTab(this, 'tab-address')">주소록</div>
+            <div class="tab" onclick="selectTab(this, 'tab-excel')">엑셀 등록</div>
+          </div>
+
+          <!-- [2-5] 칩 영역 -->
+          <div id="tab-condition" class="tab-content">
+            <div class="chip-area">
+              <div class="chip dropdown" onclick="toggleDropdown()">
+                내 저장 조건 ▾
+              </div>
+              <div class="chip favorite" onclick="loadChipCondition('예약 환자')">
+                <span class="star">★</span> 예약 환자
+              </div>
+              <div class="chip favorite" onclick="loadChipCondition('초진 환자')">
+                <span class="star">★</span> 초진 환자
+              </div>
+              <div class="chip" onclick="loadChipCondition('신규 환자')">
+                신규 환자
+              </div>
+              <div class="chip strong" onclick="openConditionModal()">
+                + 조건으로 환자 검색
+              </div>
+            </div>
+
+            <!-- [2-6] 대상 미리보기 -->
+            <div id="preview-area" class="preview-area">
+              <div class="preview-empty" id="preview-empty">
+                <div class="icon">👥</div>
+                <p>조건 검색으로 원하는 환자를<br>불러오세요</p>
+              </div>
+              <div class="preview-filled" id="preview-filled" style="display:none;">
+                <div class="recipient-count">총 <strong id="count-num">3</strong>명</div>
+                <div class="patient-card">
+                  <div class="patient-avatar">김</div>
+                  <div class="patient-info">
+                    <div class="patient-name">김민준</div>
+                    <div class="patient-meta">010-1234-5678 · 45세 · 남</div>
+                  </div>
+                </div>
+                <div class="patient-card">
+                  <div class="patient-avatar">이</div>
+                  <div class="patient-info">
+                    <div class="patient-name">이서연</div>
+                    <div class="patient-meta">010-9876-5432 · 32세 · 여</div>
+                  </div>
+                </div>
+                <div class="patient-card">
+                  <div class="patient-avatar">박</div>
+                  <div class="patient-info">
+                    <div class="patient-name">박지훈</div>
+                    <div class="patient-meta">010-5555-1234 · 28세 · 남</div>
+                  </div>
+                </div>
+              </div>
+              <div class="preview-footer" id="preview-footer" style="display:none;">상세 조회 · 편집 ›</div>
+            </div>
+          </div>
+
+          <div id="tab-individual" class="tab-content" style="display:none;">
+            <div style="display:flex;gap:8px;">
+              <input class="input-field" placeholder="환자 이름 또는 휴대폰 번호 검색" style="flex:1;">
+              <button style="padding:9px 14px;background:#4F55F0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;">검색</button>
+            </div>
+            <div class="preview-area" style="margin-top:10px;">
+              <div class="preview-empty">
+                <div class="icon">🔍</div>
+                <p>환자를 검색하거나<br>휴대폰 번호를 직접 입력하세요</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-address" class="tab-content" style="display:none;">
+            <div class="preview-area">
+              <div class="preview-empty">
+                <div class="icon">📖</div>
+                <p>저장된 주소록에서<br>환자를 선택하세요</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-excel" class="tab-content" style="display:none;">
+            <div class="preview-area" style="cursor:pointer;" onclick="showToast('엑셀 파일을 업로드해주세요.', 'info')">
+              <div class="preview-empty">
+                <div class="icon">📂</div>
+                <p>의사랑 제공 엑셀 양식에 맞춰<br>파일을 업로드하세요</p>
+                <button style="padding:7px 16px;background:#4F55F0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;margin-top:6px;">파일 선택</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [3] 보낼 시간 선택 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="section-badge">3</span>보낼 시간 선택
+          </div>
+
+          <div class="time-selector">
+            <div class="time-option active" id="opt-instant" onclick="selectTime('instant')">
+              <div class="radio checked" id="radio-instant"></div>
+              즉시 발송
+            </div>
+            <div class="time-option" id="opt-schedule" onclick="selectTime('schedule')">
+              <div class="radio" id="radio-schedule"></div>
+              예약 발송
+            </div>
+          </div>
+
+          <!-- 예약 폼 (3-2~3-4) -->
+          <div class="schedule-form" id="schedule-form" style="display:none;">
+            <hr class="divider" style="margin:0 0 10px;">
+            <div>
+              <div class="form-label">예약 날짜 (3-3)</div>
+              <input type="date" class="input-field" id="schedule-date">
+            </div>
+            <div>
+              <div class="form-label">예약 시간 (3-4)</div>
+              <div class="input-group">
+                <select class="select-field">
+                  <option>오전</option>
+                  <option>오후</option>
+                </select>
+                <input class="input-field input-sm" type="text" placeholder="10" id="schedule-hour" maxlength="2">
+                <span class="input-sep">:</span>
+                <input class="input-field input-sm" type="text" placeholder="30" id="schedule-min" maxlength="2">
+              </div>
+              <div style="font-size:11px;color:#A0A4B8;margin-top:5px;">기본값: 현재 시간 + 30분</div>
+            </div>
+          </div>
+
+          <!-- [3-5] 광고 문자 가이드 -->
+          <div class="ad-guide" id="ad-guide" style="margin-top:12px;">
+            ⚠️ 광고 문자는 야간 시간대(22시~익일 08시)에 발송이 불가합니다.<br>
+            광고 발송 시에는 수신거부 안내 문구와 인증번호가 자동으로 추가됩니다.
+          </div>
+        </div>
+
+      </div>
+      <!-- end col-left -->
+
+      <!-- ══════ RIGHT COLUMN ══════ -->
+      <div class="col-right">
+
+        <!-- [5] 메시지 작성 -->
+        <div class="card" style="flex:1;">
+          <div class="card-title">
+            <span class="section-badge">5</span>메시지 작성
+          </div>
+
+          <!-- 5-2 입력 + 미리보기 -->
+          <textarea class="message-textarea" id="msg-input" placeholder="메시지 내용을 입력하세요..."
+            oninput="updateByte()"></textarea>
+
+          <!-- 5-4 바이트 수 -->
+          <div class="message-meta">
+            <div class="byte-badge">
+              <span class="type-label" id="msg-type">SMS</span>
+              <span id="byte-count">0</span> / 90 byte
+            </div>
+            <div style="font-size:11px;color:#A0A4B8;">SMS: ~90B · LMS: ~2000B · MMS: 이미지 포함</div>
+          </div>
+
+          <!-- 5-5~5-7 툴바 -->
+          <div class="msg-toolbar" style="position:relative;">
+            <button class="toolbar-btn" onclick="loadTemplate()">+ 내 템플릿 불러오기</button>
+            <button class="toolbar-btn" id="btn-special" onclick="togglePalette('special-palette', 'btn-special')">
+              # 특수문자
+            </button>
+            <button class="toolbar-btn" id="btn-keyword" onclick="togglePalette('keyword-palette', 'btn-keyword')">
+              ☰ 예약어
+            </button>
+            <!-- 특수문자 팔레트 -->
+            <div class="palette" id="special-palette">
+              <div class="palette-title">특수문자</div>
+              <div class="palette-grid">
+                <div class="palette-item" onclick="insertText('★')">★</div>
+                <div class="palette-item" onclick="insertText('☆')">☆</div>
+                <div class="palette-item" onclick="insertText('♥')">♥</div>
+                <div class="palette-item" onclick="insertText('♦')">♦</div>
+                <div class="palette-item" onclick="insertText('●')">●</div>
+                <div class="palette-item" onclick="insertText('○')">○</div>
+                <div class="palette-item" onclick="insertText('▶')">▶</div>
+                <div class="palette-item" onclick="insertText('◀')">◀</div>
+                <div class="palette-item" onclick="insertText('▼')">▼</div>
+                <div class="palette-item" onclick="insertText('▲')">▲</div>
+                <div class="palette-item" onclick="insertText('■')">■</div>
+                <div class="palette-item" onclick="insertText('□')">□</div>
+                <div class="palette-item" onclick="insertText('✔')">✔</div>
+                <div class="palette-item" onclick="insertText('✉')">✉</div>
+                <div class="palette-item" onclick="insertText('☎')">☎</div>
+                <div class="palette-item" onclick="insertText('©')">©</div>
+              </div>
+            </div>
+            <!-- 예약어 팔레트 -->
+            <div class="palette" id="keyword-palette" style="left:120px;">
+              <div class="palette-title">예약어</div>
+              <div class="palette-grid">
+                <div class="palette-item" onclick="insertText('{이름}')">#{이름}</div>
+                <div class="palette-item" onclick="insertText('{나이}')">#{나이}</div>
+                <div class="palette-item" onclick="insertText('{성별}')">#{성별}</div>
+                <div class="palette-item" onclick="insertText('{병원명}')">#{병원명}</div>
+                <div class="palette-item" onclick="insertText('{예약일}')">#{예약일}</div>
+                <div class="palette-item" onclick="insertText('{예약시간}')">#{예약시간}</div>
+                <div class="palette-item" onclick="insertText('{진료과}')">#{진료과}</div>
+                <div class="palette-item" onclick="insertText('{담당의}')">#{담당의}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5-8 광고성 체크박스 -->
+          <div class="checkbox-row">
+            <div class="checkbox" id="ad-checkbox" onclick="toggleAd()"></div>
+            <span class="checkbox-label" onclick="toggleAd()">(광고) 광고성 메시지 발송</span>
+            <div class="tooltip-btn" title="광고 발송 체크 시 수신거부 안내 문구와 인증번호가 자동으로 추가됩니다.">?</div>
+          </div>
+
+          <!-- 5-9 이미지 추가 -->
+          <div style="margin-bottom:4px;">
+            <div class="form-label" style="margin-bottom:8px;">+ 이미지 추가 (0/3)</div>
+            <div class="image-upload-row">
+              <div class="image-tile" onclick="showToast('이미지 업로드 모달이 열립니다.', 'info')">
+                <div class="plus">+</div>
+                <div>추가</div>
+              </div>
+              <div class="image-tile" onclick="showToast('이미지 업로드 모달이 열립니다.', 'info')">
+                <div class="plus">+</div>
+                <div>추가</div>
+              </div>
+              <div class="image-tile" onclick="showToast('이미지 업로드 모달이 열립니다.', 'info')">
+                <div class="plus">+</div>
+                <div>추가</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- [4-2] 발송하기 + [4-3] 조건 저장하기 -->
+        <div class="card">
+          <button class="btn-send" onclick="handleSend()">
+            ✉️ 발송하기
+          </button>
+          <button class="btn-save-condition" id="btn-save-condition" style="display:none;" onclick="openSaveCondition()">
+            📌 발송 조건 저장하기
+          </button>
+          <div style="font-size:11px;color:#A0A4B8;text-align:center;margin-top:8px;" id="send-guide">
+            보낼 대상과 메시지를 입력 후 발송하기를 눌러주세요
+          </div>
+        </div>
+
+      </div>
+      <!-- end col-right -->
+
+    </div>
+
+    <!-- Temp save bar -->
+    <div class="temp-bar">
+      <span class="temp-label">자동 임시저장</span>
+      <span class="temp-date" id="auto-save-time">—</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ───── Toast Container ───── -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════════
+     FILTER_00: 조건 검색 모달
+════════════════════════════════════════════════ -->
+<div class="filter-overlay" id="filter-overlay">
+  <div class="filter-modal" id="filter-modal">
+
+    <!-- 헤더 -->
+    <div class="filter-modal-header">
+      <div class="section-badge" style="width:24px;height:24px;font-size:12px;">🔍</div>
+      <h2 id="filter-modal-title">조건으로 환자 검색</h2>
+      <div id="adv-toggle-btn" class="adv-toggle" onclick="toggleAdvMode()">
+        <div class="toggle-pip" id="toggle-pip"></div>
+        고급 모드
+      </div>
+      <button class="filter-action-btn" onclick="saveFilterCondition()">💾 저장</button>
+      <button class="filter-action-btn" onclick="resetFilter()">↺ 초기화</button>
+      <button class="icon-btn" onclick="closeFilter()" style="flex-shrink:0;">✕</button>
+    </div>
+
+    <div class="filter-modal-body">
+
+      <!-- [1] 조건 추가 목록 (좌) -->
+      <div class="filter-left">
+        <div class="filter-left-title">조건 추가 목록</div>
+        <div class="filter-left-scroll" id="accordion-list">
+          <!-- 아코디언은 JS로 생성 -->
+        </div>
+      </div>
+
+      <!-- [2] 조건 적용 영역 (우) -->
+      <div class="filter-right">
+        <div class="filter-right-inner" id="filter-right-inner">
+
+          <!-- [2-4] 기간 설정 (기본 모드) -->
+          <div id="basic-period" class="period-card">
+            <span class="period-label">📅 기간 설정</span>
+            <div class="period-shortcuts" id="period-shortcuts">
+              <div class="period-chip active" onclick="setPeriod(this,'최근 1년')">최근 1년</div>
+              <div class="period-chip" onclick="setPeriod(this,'최근 6개월')">최근 6개월</div>
+              <div class="period-chip" onclick="setPeriod(this,'최근 3개월')">최근 3개월</div>
+              <div class="period-chip" onclick="setPeriod(this,'전체')">전체</div>
+              <div class="period-chip" onclick="setPeriod(this,'직접 설정')">직접 설정</div>
+            </div>
+            <div class="period-date-row" id="period-custom" style="display:none;">
+              <input type="date" class="period-input" id="period-from">
+              <span style="color:#8A8FA8;">~</span>
+              <input type="date" class="period-input" id="period-to">
+            </div>
+          </div>
+
+          <!-- [2] 기본 모드 조건 영역 -->
+          <div id="basic-mode-area">
+            <div class="filter-section-head">
+              <div class="filter-count-badge">총 <span id="cond-count">0</span>개 조건 적용됨</div>
+            </div>
+
+            <!-- [2-5] 안내 문구 -->
+            <div class="filter-guide" id="filter-guide">
+              <div style="font-size:24px;">👆</div>
+              <div>좌측 목록에서 조건을 선택해 추가하세요</div>
+              <div style="font-size:12px;color:#C0C3D8;">조건을 1개 이상 추가해야 환자를 불러올 수 있습니다</div>
+            </div>
+
+            <!-- [2-7] 추가된 조건 목록 -->
+            <div class="applied-conds" id="applied-conds" style="display:none;"></div>
+          </div>
+
+          <!-- [2] 고급 모드 그룹 영역 -->
+          <div id="adv-mode-area" style="display:none;">
+            <div class="filter-section-head">
+              <div class="filter-count-badge">총 <span id="group-count">1</span>개 그룹 적용됨</div>
+            </div>
+            <div id="adv-groups"></div>
+            <button class="btn-add-group" id="btn-add-group" style="display:none;" onclick="addGroup()">
+              + 새로운 그룹 추가
+            </button>
+          </div>
+
+          <!-- [3] 환자 불러오기 결과 -->
+          <div class="result-area" id="result-area" style="display:none;">
+            <div class="result-count">환자 <span id="result-num">0</span>명을 불러왔습니다</div>
+            <button class="result-detail-btn" onclick="openDetailModal()">상세 조회·편집 ›</button>
+          </div>
+
+          <!-- [4] 저장한 조건 -->
+          <div class="saved-cond-area">
+            <div class="saved-cond-label">저장한 조건 불러오기</div>
+            <div class="saved-cond-row">
+              <select class="saved-cond-select" id="saved-cond-select">
+                <option value="">불러올 조건을 선택하세요</option>
+                <option value="예약 환자 리마인드">예약 환자 리마인드</option>
+                <option value="초진 환자 안내">초진 환자 안내</option>
+                <option value="건강검진 대상자">건강검진 대상자</option>
+              </select>
+              <button class="saved-cond-btn" onclick="loadSavedCond()">불러오기</button>
+              <button class="saved-cond-btn" style="color:#C84040;border-color:#FFCECE;" onclick="deleteSavedCond()">삭제</button>
+            </div>
+          </div>
+
+        </div><!-- /.filter-right-inner -->
+
+        <!-- [5] 환자 불러오기 버튼 -->
+        <div class="filter-footer">
+          <button class="btn-fetch-add" onclick="closeFilter()">닫기</button>
+          <button class="btn-fetch" id="btn-fetch" disabled onclick="fetchPatients()">
+            환자 불러오기
+          </button>
+        </div>
+      </div><!-- /.filter-right -->
+
+    </div><!-- /.filter-modal-body -->
+  </div><!-- /.filter-modal -->
+</div><!-- /#filter-overlay -->
+
+<!-- ═══════════════════════════════════════════════
+     FILTER_01 / FILTER_03: 상세 조회·편집 모달
+════════════════════════════════════════════════ -->
+<div class="filter-overlay" id="detail-overlay">
+  <div class="detail-modal">
+    <div class="detail-modal-header">
+      <button class="btn-prev" onclick="closeDetail()">← 이전으로</button>
+      <h2>상세 조회·편집</h2>
+      <div class="detail-cond-tags" id="detail-cond-tags"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+        <button class="sel-reset-btn" onclick="resetDetailSelection()">↺ 초기화</button>
+        <button class="sel-del-btn" onclick="deleteSelected()">선택 삭제</button>
+      </div>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-toolbar">
+        <input class="detail-search" placeholder="차트번호, 수진자명, 휴대폰 번호 검색..." id="detail-search" oninput="filterTable()">
+        <div class="detail-count-badge">총 <span id="detail-total">0</span>명 · 선택 <span id="detail-selected">0</span>명</div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table class="patient-tbl" id="patient-tbl">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>
+              <th>차트번호</th>
+              <th>수진자명</th>
+              <th>나이</th>
+              <th>성별</th>
+              <th>휴대폰 번호</th>
+              <th id="extra-col-th" style="display:none;"></th>
+            </tr>
+          </thead>
+          <tbody id="patient-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="detail-footer">
+        <div class="pagination" id="pagination"></div>
+        <button class="btn-confirm-total" onclick="confirmDetail()">
+          총 <span id="confirm-count">0</span>명 확인
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ───── Confirm: 채널 변경 (1-1a) ───── -->
+<div class="overlay" id="dialog-channel">
+  <div class="dialog">
+    <div class="dialog-title">채널을 변경하시겠습니까?</div>
+    <div class="dialog-body">작성 중인 메시지 내용이 있습니다.<br>채널 변경 시 기존 내용이 초기화됩니다.</div>
+    <div class="dialog-actions">
+      <button class="btn-dialog secondary" onclick="closeDialog('dialog-channel')">취소</button>
+      <button class="btn-dialog primary" onclick="confirmChannelChange()">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───── Confirm: 임시 저장 불러오기 (6-2) ───── -->
+<div class="overlay" id="dialog-temp" style="display:flex;">
+  <div class="dialog">
+    <div class="dialog-title">임시저장한 메시지가 있습니다</div>
+    <div class="dialog-body">임시 저장된 메시지를 불러오시겠습니까?<br><small style="color:#A0A4B8;">저장 시각: 2026-03-31 09:24</small></div>
+    <div class="dialog-actions">
+      <button class="btn-dialog secondary" onclick="closeDialog('dialog-temp')">새로 작성</button>
+      <button class="btn-dialog primary" onclick="loadTempSave()">불러오기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───── Confirm: 발송 확인 ───── -->
+<div class="overlay" id="dialog-send">
+  <div class="dialog">
+    <div class="dialog-title">메시지를 발송하시겠습니까?</div>
+    <div class="dialog-body" id="dialog-send-body">총 3명에게 메시지를 발송합니다.</div>
+    <div class="dialog-actions">
+      <button class="btn-dialog secondary" onclick="closeDialog('dialog-send')">취소</button>
+      <button class="btn-dialog primary" onclick="confirmSend()">발송하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───── Confirm: 조건 저장 ───── -->
+<div class="overlay" id="dialog-save">
+  <div class="dialog">
+    <div class="dialog-title">발송 조건 저장하기</div>
+    <div class="dialog-body">저장할 조건 이름을 입력하세요. (최대 30자)</div>
+    <input class="input-field" id="save-title" placeholder="예: 예약 환자 리마인드" maxlength="30" style="margin-bottom:18px;">
+    <div class="dialog-actions">
+      <button class="btn-dialog secondary" onclick="closeDialog('dialog-save')">취소</button>
+      <button class="btn-dialog primary" onclick="confirmSaveCondition()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───── Confirm: 템플릿 불러오기 ───── -->
+<div class="overlay" id="dialog-template">
+  <div class="dialog">
+    <div class="dialog-title">내 템플릿 불러오기</div>
+    <div class="dialog-body" style="margin-bottom:14px;">저장된 템플릿을 선택하세요.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+      <div class="palette-item" style="padding:10px 14px;" onclick="applyTemplate('예약 안내 문자')">📝 예약 안내 문자</div>
+      <div class="palette-item" style="padding:10px 14px;" onclick="applyTemplate('건강검진 안내')">📝 건강검진 안내</div>
+      <div class="palette-item" style="padding:10px 14px;" onclick="applyTemplate('초진 환영 메시지')">📝 초진 환영 메시지</div>
+    </div>
+    <button class="btn-dialog secondary" style="width:100%;" onclick="closeDialog('dialog-template')">닫기</button>
+  </div>
+</div>
+
+<script>
+let currentChannel = 'sms';
+let pendingChannel = null;
+let hasRecipients = false;
+let isAdChecked = false;
+let isSchedule = false;
+
+// ──── 채널 선택 ────
+function selectChannel(ch) {
+  const msg = document.getElementById('msg-input').value.trim();
+  if (msg.length > 0 && ch !== currentChannel) {
+    pendingChannel = ch;
+    document.getElementById('dialog-channel').classList.add('visible');
+  } else {
+    applyChannel(ch);
+  }
+}
+function applyChannel(ch) {
+  currentChannel = ch;
+  document.getElementById('ch-sms').classList.toggle('active', ch === 'sms');
+  document.getElementById('ch-kakao').classList.toggle('active', ch === 'kakao');
+}
+function confirmChannelChange() {
+  document.getElementById('msg-input').value = '';
+  updateByte();
+  applyChannel(pendingChannel);
+  closeDialog('dialog-channel');
+  showToast('채널이 변경되었습니다. 메시지가 초기화됩니다.', 'info');
+}
+
+// ──── 탭 선택 ────
+function selectTab(el, targetId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+  document.getElementById(targetId).style.display = 'block';
+}
+
+// ──── 칩 조건 불러오기 ────
+function loadChipCondition(name) {
+  // 칩 클릭 시 해당 조건을 preset해서 필터 모달 오픈
+  openConditionModal(name);
+}
+
+function openConditionModal(presetName) {
+  // 필터 모달 열기
+  document.getElementById('filter-overlay').classList.add('visible');
+  // preset 조건 추가
+  if (presetName && presetName !== '조건 검색') {
+    const chipMap = {
+      '예약 환자': { cat: '예약내역', val: '예약 확정 상태' },
+      '초진 환자': { cat: '환자 종류', val: '초진' },
+      '신규 환자': { cat: '내원일입', val: '최근 30일 이내 첫 내원' },
+    };
+    if (chipMap[presetName] && appliedConditions.length === 0) {
+      const c = chipMap[presetName];
+      appliedConditions.push({ cat: c.cat, name: presetName, value: c.val, excl: false });
+      renderAppliedConds();
+    }
+  }
+}
+
+function toggleDropdown() {
+  showToast('저장한 조건이 없습니다.', 'info');
+}
+
+// ──── 시간 선택 ────
+function selectTime(type) {
+  isSchedule = type === 'schedule';
+  document.getElementById('opt-instant').classList.toggle('active', !isSchedule);
+  document.getElementById('opt-schedule').classList.toggle('active', isSchedule);
+  document.getElementById('radio-instant').classList.toggle('checked', !isSchedule);
+  document.getElementById('radio-schedule').classList.toggle('checked', isSchedule);
+  document.getElementById('schedule-form').style.display = isSchedule ? 'flex' : 'none';
+  if (isSchedule) {
+    const now = new Date(Date.now() + 30 * 60 * 1000);
+    document.getElementById('schedule-date').valueAsDate = now;
+    document.getElementById('schedule-hour').value = String(now.getHours() % 12 || 12).padStart(2, '0');
+    document.getElementById('schedule-min').value = String(now.getMinutes()).padStart(2, '0');
+    updateAdGuide();
+  } else {
+    document.getElementById('ad-guide').classList.remove('visible');
+  }
+}
+
+// ──── 바이트 계산 ────
+function updateByte() {
+  const txt = document.getElementById('msg-input').value;
+  let bytes = 0;
+  for (let c of txt) bytes += c.charCodeAt(0) > 127 ? 2 : 1;
+  document.getElementById('byte-count').textContent = bytes;
+  const type = bytes <= 90 ? 'SMS' : bytes <= 2000 ? 'LMS' : 'MMS';
+  const el = document.getElementById('msg-type');
+  el.textContent = type;
+  el.style.background = type === 'SMS' ? '#4F55F0' : type === 'LMS' ? '#E6821E' : '#D03050';
+  autoSave();
+}
+
+// ──── 광고 체크 ────
+function toggleAd() {
+  isAdChecked = !isAdChecked;
+  const cb = document.getElementById('ad-checkbox');
+  cb.classList.toggle('checked', isAdChecked);
+  updateAdGuide();
+  if (isAdChecked) showToast('광고성 메시지로 설정됩니다.', 'info');
+}
+function updateAdGuide() {
+  const guide = document.getElementById('ad-guide');
+  if (isAdChecked && isSchedule) {
+    guide.classList.add('visible');
+  } else {
+    guide.classList.remove('visible');
+  }
+}
+
+// ──── 팔레트 ────
+function togglePalette(id, btnId) {
+  const all = ['special-palette', 'keyword-palette'];
+  all.forEach(p => {
+    if (p !== id) document.getElementById(p).classList.remove('visible');
+  });
+  document.getElementById(id).classList.toggle('visible');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.msg-toolbar')) {
+    document.querySelectorAll('.palette').forEach(p => p.classList.remove('visible'));
+  }
+});
+function insertText(t) {
+  const ta = document.getElementById('msg-input');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  ta.value = ta.value.slice(0, s) + t + ta.value.slice(e);
+  ta.selectionStart = ta.selectionEnd = s + t.length;
+  ta.focus();
+  updateByte();
+  document.querySelectorAll('.palette').forEach(p => p.classList.remove('visible'));
+}
+
+// ──── 템플릿 ────
+function loadTemplate() { document.getElementById('dialog-template').classList.add('visible'); }
+function applyTemplate(name) {
+  const templates = {
+    '예약 안내 문자': '[{병원명}]\n{이름} 님, 예약하신 진료가 {예약일} {예약시간}에 예정되어 있습니다.\n내원 전 확인 부탁드립니다. 문의: 대표번호',
+    '건강검진 안내': '[{병원명}]\n{이름} 님, 건강검진 안내 드립니다.\n검진 일정: {예약일} / 담당: {담당의}\n금식 8시간 전 부탁드립니다.',
+    '초진 환영 메시지': '[{병원명}]\n{이름} 님, 처음 방문해 주셔서 감사합니다.\n저희 병원을 찾아주신 것을 진심으로 환영합니다.'
+  };
+  document.getElementById('msg-input').value = templates[name] || '';
+  updateByte();
+  closeDialog('dialog-template');
+  showToast(`"${name}" 템플릿을 불러왔습니다.`, 'success');
+}
+
+// ──── 발송 ────
+function handleSend() {
+  const msg = document.getElementById('msg-input').value.trim();
+  if (!hasRecipients) { showToast('보낼 대상을 선택해주세요.', 'warning'); return; }
+  if (!msg) { showToast('메시지를 입력해주세요.', 'warning'); return; }
+  const h = new Date().getHours();
+  if (isAdChecked && !isSchedule && (h >= 22 || h < 8)) {
+    showToast('광고 문자는 야간 시간대를 제외하고 예약해 주세요.', 'warning'); return;
+  }
+  document.getElementById('dialog-send').classList.add('visible');
+}
+function confirmSend() {
+  closeDialog('dialog-send');
+  setTimeout(() => {
+    showToast(isSchedule ? '메시지를 예약했습니다.' : '메시지를 발송했습니다.', 'success');
+  }, 200);
+}
+
+// ──── 조건 저장 ────
+function openSaveCondition() { document.getElementById('dialog-save').classList.add('visible'); }
+function confirmSaveCondition() {
+  const t = document.getElementById('save-title').value.trim();
+  if (!t) { showToast('조건 이름을 입력해주세요.', 'warning'); return; }
+  closeDialog('dialog-save');
+  showToast(`"${t}" 조건이 저장됐습니다.`, 'success');
+  document.getElementById('save-title').value = '';
+}
+
+// ──── 임시 저장 ────
+function loadTempSave() {
+  closeDialog('dialog-temp');
+  document.getElementById('msg-input').value = '[{병원명}]\n{이름} 님, 다음 진료 일정을 안내드립니다. {예약일} {예약시간}에 예약이 되어 있습니다.';
+  updateByte();
+  loadChipCondition('예약 환자');
+  showToast('임시 저장된 메시지를 불러왔습니다.', 'success');
+}
+function autoSave() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('auto-save-time').textContent = `방금 전 ${h}:${m}:${s} 자동 임시저장`;
+}
+
+// ──── 다이얼로그 ────
+function closeDialog(id) {
+  document.getElementById(id).classList.remove('visible');
+  document.getElementById(id).style.display = '';
+}
+
+// ──── Toast ────
+function showToast(msg, type) {
+  const icons = { warning: '⚠️', success: '✅', info: 'ℹ️' };
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = `${icons[type] || ''} ${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(8px)'; toast.style.transition = 'all 0.3s'; setTimeout(() => toast.remove(), 300); }, 2800);
+}
+
+// 초기 Date 설정
+document.getElementById('schedule-date').valueAsDate = new Date();
+
+/* ═══════════════════════════════════════════
+   FILTER 모달 전역 상태
+═══════════════════════════════════════════ */
+let appliedConditions = [];   // { cat, name, value, excl }
+let isAdvMode = false;
+let advGroups = [{ id: 1, operator: 'AND', conditions: [] }];
+let nextGroupId = 2;
+let fetchedCount = 0;
+let detailPatients = [];
+let detailFiltered = [];
+let detailPage = 1;
+const PAGE_SIZE = 30;
+let operator = 'AND'; // 기본 모드 단일 연산자
+
+// ── 조건 카테고리 데이터 ──
+const COND_CATEGORIES = {
+  '환자 정보':    ['이름', '나이 범위', '성별', '생년월일', '차트번호'],
+  '내원일입':     ['최초 내원일', '최근 내원일', '내원 횟수'],
+  '환자 종류':    ['초진', '재진', '신규', '장기미내원'],
+  '상병코드':     ['주상병 코드', '부상병 코드'],
+  '처방코드':     ['처방 코드', '처방 횟수'],
+  '생일':         ['생일 월', '생일 범위'],
+  '진료과':       ['진료과 선택'],
+  '주소(구)':     ['시/도', '구/군'],
+  '예약내역':     ['예약 확정 상태', '예약 취소 이력', '예약 미완료'],
+  '건강검진(일반)': ['검진 대상 연도', '검진 결과'],
+  '건강검진(산전)': ['산전 검진 여부'],
+  '상담메모':     ['메모 키워드 포함'],
+  '컨택트그룹':   ['그룹 선택'],
+  '수술경력':     ['수술 코드', '수술 기간'],
+  '후속조치':     ['후속조치 항목'],
+  '통합검색':     ['키워드 통합검색'],
+};
+
+// ── 아코디언 렌더링 ──
+function renderAccordion() {
+  const el = document.getElementById('accordion-list');
+  el.innerHTML = Object.entries(COND_CATEGORIES).map(([cat, items]) => `
+    <div class="accordion-item">
+      <div class="accordion-head" onclick="toggleAcc(this)">
+        <span>${cat}</span><span class="acc-arrow">›</span>
+      </div>
+      <div class="accordion-body">
+        ${items.map(item => `
+          <div class="cond-item" onclick="addCondition('${cat}','${item}')">
+            <span>${item}</span>
+            <span class="cond-add">+</span>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function toggleAcc(head) {
+  const body = head.nextElementSibling;
+  const isOpen = head.classList.contains('open');
+  // 모두 닫기
+  document.querySelectorAll('.accordion-head').forEach(h => {
+    h.classList.remove('open');
+    h.nextElementSibling.classList.remove('open');
+  });
+  if (!isOpen) { head.classList.add('open'); body.classList.add('open'); }
+}
+
+// ── 조건 추가 ──
+function addCondition(cat, name) {
+  if (isAdvMode) {
+    // 고급 모드: 활성 그룹에 추가
+    const activeGroup = advGroups.find(g => g.active) || advGroups[0];
+    activeGroup.conditions.push({ name, value: '', excl: false });
+    renderAdvGroups();
+  } else {
+    // 기본 모드: 이미 불러온 후 수정 시 confirm
+    if (fetchedCount > 0) {
+      if (!confirm('조건을 수정하면 불러온 환자 결과가 초기화됩니다. 계속하시겠습니까?')) return;
+      resetFetchResult();
+    }
+    appliedConditions.push({ cat, name, value: '', excl: false });
+    renderAppliedConds();
+  }
+  document.getElementById('btn-fetch').disabled = false;
+}
+
+// ── 기본 모드 조건 렌더링 ──
+function renderAppliedConds() {
+  const list = document.getElementById('applied-conds');
+  const guide = document.getElementById('filter-guide');
+  const count = document.getElementById('cond-count');
+  count.textContent = appliedConditions.length;
+
+  if (appliedConditions.length === 0) {
+    guide.style.display = 'flex';
+    list.style.display = 'none';
+    document.getElementById('btn-fetch').disabled = true;
+    return;
+  }
+  guide.style.display = 'none';
+  list.style.display = 'flex';
+
+  list.innerHTML = appliedConditions.map((c, i) => {
+    const opHtml = i === 0 ? '' : `
+      <span class="operator-badge ${operator.toLowerCase()}" onclick="toggleOperator()">${operator === 'AND' ? '그리고' : '또는'}</span>`;
+    return `
+      <div class="applied-cond-row">
+        ${opHtml}
+        <div class="cond-pill">
+          <span class="cond-pill-name">${c.name}</span>
+          <input style="flex:1;border:1px solid #E4E6EF;border-radius:5px;padding:3px 7px;font-size:11px;outline:none;"
+            placeholder="값 입력..." value="${c.value}"
+            onchange="appliedConditions[${i}].value=this.value">
+          <span class="cond-pill-excl" title="제외 검색 도움말 (?)">제외</span>
+          <input type="checkbox" title="이 조건 제외" onchange="appliedConditions[${i}].excl=this.checked" ${c.excl?'checked':''}>
+        </div>
+        <button class="cond-del-btn" onclick="removeCondition(${i})">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function toggleOperator() {
+  operator = operator === 'AND' ? 'OR' : 'AND';
+  renderAppliedConds();
+}
+
+function removeCondition(i) {
+  if (fetchedCount > 0) {
+    if (!confirm('조건을 수정하면 불러온 환자 결과가 초기화됩니다. 계속하시겠습니까?')) return;
+    resetFetchResult();
+  }
+  appliedConditions.splice(i, 1);
+  renderAppliedConds();
+}
+
+function resetFetchResult() {
+  fetchedCount = 0;
+  document.getElementById('result-area').style.display = 'none';
+}
+
+// ── 기간 설정 ──
+function setPeriod(el, val) {
+  document.querySelectorAll('.period-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const custom = document.getElementById('period-custom');
+  if (val === '직접 설정') {
+    custom.style.display = 'flex';
+    const now = new Date();
+    document.getElementById('period-to').valueAsDate = now;
+    const from = new Date(); from.setFullYear(now.getFullYear() - 1);
+    document.getElementById('period-from').valueAsDate = from;
+  } else {
+    custom.style.display = 'none';
+  }
+}
+
+// ── 저장 / 초기화 ──
+function saveFilterCondition() {
+  if (appliedConditions.length === 0 && !isAdvMode) {
+    showToast('저장할 조건이 없습니다', 'warning'); return;
+  }
+  document.getElementById('dialog-save').classList.add('visible');
+}
+
+function resetFilter() {
+  if (appliedConditions.length === 0 && !isAdvMode) {
+    showToast('초기화할 조건이 없습니다', 'warning'); return;
+  }
+  if (!confirm('모든 조건을 초기화하시겠습니까?')) return;
+  appliedConditions = [];
+  operator = 'AND';
+  advGroups = [{ id: 1, operator: 'AND', conditions: [], active: true }];
+  resetFetchResult();
+  renderAppliedConds();
+  if (isAdvMode) renderAdvGroups();
+  showToast('조건이 초기화됐습니다', 'info');
+}
+
+// ── 저장한 조건 불러오기 / 삭제 ──
+function loadSavedCond() {
+  const sel = document.getElementById('saved-cond-select').value;
+  if (!sel) { showToast('선택한 조건이 없습니다', 'warning'); return; }
+  if (appliedConditions.length > 0) {
+    if (!confirm(`현재 추가된 조건이 있습니다. "${sel}" 조건으로 덮어씌우겠습니까?`)) return;
+  }
+  // 샘플 데이터 로드
+  const presets = {
+    '예약 환자 리마인드': [{ cat:'예약내역', name:'예약 확정 상태', value:'', excl:false }],
+    '초진 환자 안내':    [{ cat:'환자 종류', name:'초진', value:'', excl:false }],
+    '건강검진 대상자':   [{ cat:'건강검진(일반)', name:'검진 대상 연도', value:'2026', excl:false }],
+  };
+  appliedConditions = presets[sel] || [];
+  renderAppliedConds();
+  if (appliedConditions.length > 0) document.getElementById('btn-fetch').disabled = false;
+  showToast('조건을 불러왔습니다', 'success');
+}
+
+function deleteSavedCond() {
+  const sel = document.getElementById('saved-cond-select');
+  if (!sel.value) { showToast('선택한 조건이 없습니다', 'warning'); return; }
+  const name = sel.value;
+  sel.remove(sel.selectedIndex);
+  sel.value = '';
+  showToast('조건을 삭제했습니다', 'success');
+}
+
+// ── 환자 불러오기 [5] ──
+function fetchPatients() {
+  const hasEmpty = appliedConditions.some(c => c.value === '' && !['초진','재진','신규'].includes(c.name));
+  // 간단한 필수입력 체크 완화: 미리 정의된 카테고리값 없을 때만
+  fetchedCount = Math.floor(Math.random() * 200) + 10;
+  document.getElementById('result-num').textContent = fetchedCount;
+  document.getElementById('result-area').style.display = 'flex';
+  generateDummyPatients(fetchedCount);
+  showToast(`환자를 불러왔습니다 (총 ${fetchedCount}명)`, 'success');
+}
+
+// ── 상세 조회 모달 ──
+function openDetailModal() {
+  if (fetchedCount === 0) { showToast('불러온 환자가 없습니다', 'warning'); return; }
+  // 조건 태그
+  const tags = document.getElementById('detail-cond-tags');
+  tags.innerHTML = appliedConditions.map(c =>
+    `<span class="detail-cond-tag">${c.name}</span>`).join('');
+  // 총 카운트
+  document.getElementById('detail-total').textContent = detailFiltered.length || detailPatients.length;
+  updateDetailSelected();
+  renderTable();
+  document.getElementById('detail-overlay').classList.add('visible');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('visible');
+}
+
+function generateDummyPatients(n) {
+  const lastNames = ['김','이','박','최','정','강','조','윤','장','임'];
+  const firstNames = ['민준','서연','지훈','수아','현우','지은','준혁','유진','동현','서현'];
+  const depts = ['내과','정형외과','피부과','안과','치과','산부인과'];
+  detailPatients = Array.from({length: n}, (_, i) => ({
+    id: i,
+    chart: `C${String(10001 + i).padStart(5,'0')}`,
+    name: lastNames[i%10] + firstNames[i%10],
+    age: 20 + (i % 60),
+    gender: i % 2 === 0 ? '남' : '여',
+    phone: `010-${String(1000 + i*7 % 9000).padStart(4,'0')}-${String(1000 + i*3 % 9000).padStart(4,'0')}`,
+    dept: depts[i % depts.length],
+    checked: true,
+  }));
+  detailFiltered = [...detailPatients];
+  detailPage = 1;
+}
+
+function filterTable() {
+  const q = document.getElementById('detail-search').value.toLowerCase();
+  detailFiltered = detailPatients.filter(p =>
+    p.chart.toLowerCase().includes(q) ||
+    p.name.toLowerCase().includes(q) ||
+    p.phone.includes(q));
+  detailPage = 1;
+  document.getElementById('detail-total').textContent = detailFiltered.length;
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('patient-tbody');
+  const start = (detailPage - 1) * PAGE_SIZE;
+  const pageData = detailFiltered.slice(start, start + PAGE_SIZE);
+  tbody.innerHTML = pageData.map((p, i) => `
+    <tr class="${p.checked ? 'selected' : ''}" onclick="rowClick(${start+i},event)">
+      <td><input type="checkbox" ${p.checked ? 'checked' : ''}
+        onchange="detailFiltered[${start+i}].checked=this.checked;updateDetailSelected();renderTableHighlight()"></td>
+      <td>${p.chart}</td>
+      <td style="font-weight:600;">${p.name}</td>
+      <td>${p.age}세</td>
+      <td>${p.gender}</td>
+      <td>${p.phone}</td>
+    </tr>`).join('');
+  renderPagination();
+  updateDetailSelected();
+}
+
+function rowClick(idx, e) {
+  if (e.target.tagName === 'INPUT') return;
+  detailFiltered[idx].checked = !detailFiltered[idx].checked;
+  renderTable();
+}
+
+function renderTableHighlight() {
+  document.querySelectorAll('#patient-tbody tr').forEach((tr, i) => {
+    const start = (detailPage - 1) * PAGE_SIZE;
+    tr.classList.toggle('selected', !!detailFiltered[start + i]?.checked);
+  });
+  updateDetailSelected();
+}
+
+function updateDetailSelected() {
+  const sel = detailFiltered.filter(p => p.checked).length;
+  document.getElementById('detail-selected').textContent = sel;
+  document.getElementById('confirm-count').textContent = sel;
+}
+
+function toggleAll(chk) {
+  const start = (detailPage - 1) * PAGE_SIZE;
+  detailFiltered.slice(start, start + PAGE_SIZE).forEach(p => p.checked = chk.checked);
+  renderTable();
+}
+
+function renderPagination() {
+  const total = Math.ceil(detailFiltered.length / PAGE_SIZE);
+  const pg = document.getElementById('pagination');
+  pg.innerHTML = [
+    `<div class="pg-btn" onclick="goPage(${detailPage-1})">‹</div>`,
+    ...Array.from({length: Math.min(total, 5)}, (_, i) => {
+      const p = i + 1;
+      return `<div class="pg-btn ${p === detailPage ? 'active' : ''}" onclick="goPage(${p})">${p}</div>`;
+    }),
+    `<div class="pg-btn" onclick="goPage(${detailPage+1})">›</div>`,
+  ].join('');
+}
+
+function goPage(p) {
+  const total = Math.ceil(detailFiltered.length / PAGE_SIZE);
+  if (p < 1 || p > total) return;
+  detailPage = p;
+  renderTable();
+}
+
+function deleteSelected() {
+  const sel = detailFiltered.filter(p => p.checked);
+  if (sel.length === 0) { showToast('선택한 환자가 없습니다', 'warning'); return; }
+  detailPatients = detailPatients.filter(p => !p.checked);
+  detailFiltered = detailFiltered.filter(p => !p.checked);
+  document.getElementById('detail-total').textContent = detailFiltered.length;
+  fetchedCount = detailFiltered.length;
+  document.getElementById('result-num').textContent = fetchedCount;
+  renderTable();
+  showToast(`${sel.length}명이 삭제됐습니다`, 'success');
+}
+
+function resetDetailSelection() {
+  if (!confirm('삭제한 환자를 모두 복원하시겠습니까?')) return;
+  detailPatients.forEach(p => p.checked = true);
+  detailFiltered = [...detailPatients];
+  document.getElementById('detail-total').textContent = detailFiltered.length;
+  fetchedCount = detailFiltered.length;
+  renderTable();
+  showToast('초기화됐습니다', 'info');
+}
+
+function confirmDetail() {
+  const sel = detailFiltered.filter(p => p.checked).length;
+  if (sel === 0) { showToast('선택한 환자가 없습니다', 'warning'); return; }
+  fetchedCount = sel;
+  document.getElementById('result-num').textContent = sel;
+  closeDetail();
+  applyFilterToSend();
+  showToast(`총 ${sel}명이 발송 대상에 추가됐습니다`, 'success');
+}
+
+// ── 발송 화면에 반영 ──
+function applyFilterToSend() {
+  closeFilter();
+  hasRecipients = true;
+  document.getElementById('preview-empty').style.display = 'none';
+  const filled = document.getElementById('preview-filled');
+  filled.style.display = 'flex';
+  document.getElementById('count-num').textContent = fetchedCount;
+  document.getElementById('preview-footer').style.display = 'block';
+  document.getElementById('btn-save-condition').style.display = 'block';
+  // 칩 버튼을 "조건 수정"으로 변경
+  document.querySelector('.chip.strong').textContent = '✏️ 조건 수정';
+  autoSave();
+}
+
+function closeFilter() {
+  document.getElementById('filter-overlay').classList.remove('visible');
+}
+
+// ── 고급 모드 ──
+function toggleAdvMode() {
+  const hasBasicConds = appliedConditions.length > 0;
+  const hasAdvConds = advGroups.some(g => g.conditions.length > 0);
+  if (!isAdvMode && hasBasicConds) {
+    if (!confirm('기본 모드 조건이 있습니다. 고급 모드로 전환하면 초기화됩니다. 계속하시겠습니까?')) return;
+    appliedConditions = [];
+  }
+  if (isAdvMode && hasAdvConds) {
+    if (!confirm('고급 모드 조건이 있습니다. 기본 모드로 전환하면 초기화됩니다. 계속하시겠습니까?')) return;
+    advGroups = [{ id: 1, operator: 'AND', conditions: [], active: true }];
+    nextGroupId = 2;
+  }
+  isAdvMode = !isAdvMode;
+  const btn = document.getElementById('adv-toggle-btn');
+  btn.classList.toggle('on', isAdvMode);
+  document.getElementById('basic-mode-area').style.display = isAdvMode ? 'none' : 'block';
+  document.getElementById('basic-period').style.display = isAdvMode ? 'none' : 'flex';
+  document.getElementById('adv-mode-area').style.display = isAdvMode ? 'block' : 'none';
+  resetFetchResult();
+  if (isAdvMode) {
+    renderAdvGroups();
+    showToast('고급모드로 전환합니다', 'info');
+  } else {
+    renderAppliedConds();
+    showToast('기본모드로 전환했습니다', 'info');
+  }
+}
+
+function renderAdvGroups() {
+  const container = document.getElementById('adv-groups');
+  const groupCount = document.getElementById('group-count');
+  groupCount.textContent = advGroups.length;
+  container.innerHTML = advGroups.map((g, gi) => {
+    const sepHtml = gi > 0 ? `
+      <div class="adv-group-sep">
+        <div class="adv-sep-line"></div>
+        <select onchange="advGroups[${gi}].interOp=this.value">
+          <option ${(g.interOp||'AND')==='AND'?'selected':''}>AND</option>
+          <option ${(g.interOp||'AND')==='OR'?'selected':''}>OR</option>
+        </select>
+        <div class="adv-sep-line"></div>
+      </div>` : '';
+    const condsHtml = g.conditions.length === 0
+      ? `<div class="adv-group-guide">조건을 추가하세요</div>`
+      : g.conditions.map((c, ci) => `
+          <div class="applied-cond-row" style="margin-bottom:5px;">
+            ${ci > 0 ? `<span class="operator-badge ${g.operator.toLowerCase()}">${g.operator==='AND'?'그리고':'또는'}</span>` : ''}
+            <div class="cond-pill">
+              <span class="cond-pill-name">${c.name}</span>
+              <input style="flex:1;border:1px solid #E4E6EF;border-radius:5px;padding:3px 7px;font-size:11px;outline:none;" placeholder="값 입력...">
+            </div>
+            <button class="cond-del-btn" onclick="removeAdvCond(${gi},${ci})">✕</button>
+          </div>`).join('');
+    return `${sepHtml}
+      <div class="adv-group-card ${g.active?'active':''}" id="adv-group-${g.id}" ondblclick="activateGroup(${gi})">
+        <div class="adv-group-header">
+          <span class="adv-group-title">그룹 ${gi + 1}</span>
+          <select class="adv-operator-select" ${g.conditions.length < 2 ? 'disabled' : ''}
+            onchange="advGroups[${gi}].operator=this.value;renderAdvGroups()">
+            <option ${g.operator==='AND'?'selected':''}>AND</option>
+            <option ${g.operator==='OR'?'selected':''}>OR</option>
+          </select>
+          ${advGroups.length > 1 ? `<button class="adv-group-del" onclick="deleteGroup(${gi})">그룹 삭제</button>` : ''}
+        </div>
+        ${condsHtml}
+      </div>`;
+  }).join('');
+  // 첫 그룹에 조건이 1개 이상이면 그룹 추가 버튼 노출
+  document.getElementById('btn-add-group').style.display =
+    advGroups[0].conditions.length > 0 ? 'block' : 'none';
+  document.getElementById('btn-fetch').disabled =
+    !advGroups.some(g => g.conditions.length > 0);
+}
+
+function activateGroup(gi) {
+  advGroups.forEach((g, i) => g.active = (i === gi));
+  renderAdvGroups();
+}
+
+function removeAdvCond(gi, ci) {
+  advGroups[gi].conditions.splice(ci, 1);
+  renderAdvGroups();
+}
+
+function deleteGroup(gi) {
+  advGroups.splice(gi, 1);
+  if (!advGroups.some(g => g.active)) advGroups[0].active = true;
+  renderAdvGroups();
+}
+
+function addGroup() {
+  advGroups.forEach(g => g.active = false);
+  advGroups.push({ id: nextGroupId++, operator: 'AND', conditions: [], active: true, interOp: 'AND' });
+  renderAdvGroups();
+}
+
+// ── 초기 렌더링 ──
+renderAccordion();
+</script>
+
+</body>
+</html>
